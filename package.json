@@ -1,0 +1,11 @@
+{
+  "main": "./integration.js",
+  "name": "PassiveTotal",
+  "version": "3.0.0-beta",
+  "private": true,
+  "dependencies": {
+    "request": "^2.88",
+    "async": "^2.6.2",
+    "ip-address": "^5.9.0"
+  }
+}
