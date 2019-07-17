@@ -292,7 +292,9 @@ function onDetails(lookupObject, options, cb) {
         return cb(err);
       }
 
-      results.passive.subdomains = results.passive.subdomains.splice(0,100);
+      if(results.passive.subdomains){
+        results.passive.subdomains = results.passive.subdomains.splice(0,100);
+      }
       //store the results into the details object so we can access them in our template
       lookupObject.data.details.whois = results.whois;
       lookupObject.data.details.passive = results.passive;
