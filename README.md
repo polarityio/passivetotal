@@ -5,6 +5,11 @@ The Polarity - PassiveTotal integration searches PassiveTotal for associated DNS
 To learn more about PassiveTotal, please visit the [official website](https://www.riskiq.com/products/passivetotal/).
 
 
+Check out the integration in action:
+
+![passivetotal](https://user-images.githubusercontent.com/22529325/61401300-dc40a000-a89f-11e9-8d34-d24246902378.gif)
+
+
 ## PassiveTotal Integration Options
 
 ### PassiveTotal Api URL
