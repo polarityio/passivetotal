@@ -2,325 +2,217 @@
   <a href="https://community.riskiq.com/search/{{details.queryValue}}">View in PassiveTotal {{fa-icon "external-link-square" class="external-link-icon"}}</a>
 </div>
 
+{{#if errorMessage}}
+    <div class="alert alert-danger error-container">
+        <div class="error-title">{{fa-icon "exclamation-circle"}} Error Loading Details </div>
+        {{errorMessage}}
+    </div>
+{{/if}}
+
 <ul class="nav nav-tabs">
-    <li class="nav-item">
-        <a {{action "changeTab" "enrichment"}} class="nav-link {{if (or (eq activeTab "enrichment")(not activeTab)) "active"}}" href="#">Enrich</a>
-    </li>
-    <li class="nav-item">
-        <a {{action "changeTab" "subdomains"}} class="nav-link {{if (eq activeTab "subdomains") "active"}}" href="#">Subs</a>
-    </li>
     <li class="nav-item">
         <a {{action "changeTab" "whois"}} class="nav-link {{if (eq activeTab "whois") "active"}}" href="#">Whois</a>
     </li>
-    <li class="nav-item">
-        <a {{action "changeTab" "passivedns"}} class="nav-link {{if (eq activeTab "passivedns") "active"}}" href="#">pDNS</a>
-    </li>
+    {{#if (eq block.entity.type "domain")}}
+        <li class="nav-item">
+            <a {{action "changeTab" "malware"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
+                Malware {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.malware.length}}){{/if}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a {{action "changeTab" "osint"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (eq activeTab "osint") "active"}}" href="#">
+                OSInt {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.osint.length}}){{/if}}
+            </a>
+        </li>
+    {{/if}}
 </ul>
 
-{{#unless block.isLoadingDetails}}
-  {{#if (or (eq activeTab "enrichment")(not activeTab))}}
-
-    <h1 class="p-title">
-        {{fa-icon "eye" fixedWidth=true}}  Enrichment Details
-    </h1>
-
-    {{#if (eq details.passive.everCompromised null)}}
-    <div>
-        <span class="p-key">Ever Compromised? </span>
-        <span class="p-value">Unknown</span>
-    </div>
-    {{else}}
-    <div>
-        <span class="p-key">Ever Compromised? </span>
-        <span class="p-value">{{details.passive.everCompromised}}</span>
-    </div>
-    {{/if}}
-
-    {{#if (eq details.passive.sinkhole null)}}
-    <div>
-        <span class="p-key">Is a Sinkhole? </span>
-        <span class="p-value">Unknown</span>
-    </div>
-    {{else}}
-    <div>
-        <span class="p-key">Is a Sinkhole? </span>
-        <span class="p-value">{{details.passive.sinkhole}}</span>
-    </div>
-    {{/if}}
-
-    {{#if (eq details.passive.classification null)}}
-    <div>
-        <span class="p-key">Classification: </span>
-        <span class="p-value">Unknown</span>
-    </div>
-    {{else}}
-    <div>
-        <span class="p-key">Classification: </span>
-        <span class="p-value">{{details.passive.classification}}</span>
-    </div>
-    {{/if}}
-
-    {{#if details.passive.tld}}
-    <div>
-        <span class="p-key">TLD: </span>
-        <span class="p-value">{{details.passive.tld}}</span>
-    </div>
-    {{/if}}
-
-    {{#if details.passive.dynamicDns}}
-    <div>
-        <span class="p-key">Dynamic DNS: </span>
-        <span class="p-value">{{details.passive.dynamicDns}}</span>
-    </div>
-    {{/if}}
-
-    {{#if details.passive.global_tags}}
-      <div>
-          <span class="p-title">{{fa-icon "globe" fixedWidth=true}} Global Tags </span>
-      </div>
-      <div>
-          {{#each details.passive.global_tags as |tag|}}
-              <span class="pt-source-tag">{{tag}}</span>
-          {{/each}}
-      </div>
-    {{/if}}
-
-    {{#if details.passive.system_tags}}
-      <div>
-          <span class="p-title">{{fa-icon "database" fixedWidth=true}} System Tags </span>
-      </div>
-      <div>
-          {{#each details.passive.system_tags as |tag|}}
-              <span class="pt-source-tag">{{tag}}</span>
-          {{/each}}
-      </div>
-    {{/if}}
-
-    {{#if details.passive.tags}}
-      <div>
-          <span class="p-title">{{fa-icon "users" fixedWidth=true}} User Tags </span>
-      </div>
-      <div>
-          {{#each details.passive.tags as |tag|}}
-              <span class="pt-source-tag">{{tag}}</span>
-          {{/each}}
-      </div>
+{{#if (eq activeTab "malware")}}
+    {{#if block.isLoadingDetails}}
+        <div class="alert alert-info" role="alert">
+            Malware Details are Loading
+        </div>
     {{/if}}
 
     {{#if details.malware}}
-    <h1 class="p-title">
-        {{fa-icon "bug" fixedWidth=true}}  Malware Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Records</th>
-        </thead>
-        <tbody>
+        <h1 class="p-title">
+            {{fa-icon "bug" fixedWidth=true}}  Malware Details
+        </h1>
         {{#each details.malware as |result resultIndex|}}
-            <tr>Sample:<a href="https://www.virustotal.com/gui/search/{{{result.sample}}}">{{{result.sample}}} (VT) {{fa-icon "external-link-square" class="external-link-icon"}}</a></tr>
-            <tr>Collection Date: <b>{{{result.collectionDate}}}</b></tr>
-            <tr>Source:<a href="{{{result.sourceUrl}}}">{{{result.source}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></tr><br>
+            <div class="mb-2">
+                <div>
+                    <span class="p-key">Sample: </span>
+                    <span class="p-value"><a href="https://www.virustotal.com/gui/search/{{{result.sample}}}">{{{result.sample}}} (VT) {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                </div>
+                <div>
+                    <span class="p-key">Collection Date: </span>
+                    <span class="p-value">{{result.collectionDate}}</span>
+                </div>
+                <div>
+                    <span class="p-key">Source: </span>
+                    <span class="p-value"><a href="{{{result.sourceUrl}}}">{{{result.source}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                </div>
+            </div>
         {{/each}}
-        </tbody>
-    </table>
+    {{else}}
+        <div class="alert alert-info mt-2" role="alert">
+            No Malware Details Found
+        </div>
     {{/if}}
+{{/if}}
 
+{{#if (eq activeTab "osint")}}
+    {{#if block.isLoadingDetails}}
+        <div class="alert alert-info" role="alert">
+            Open Source Intelligence is Loading
+        </div>
+    {{/if}}
     {{#if details.osint}}
-    <h1 class="p-title">
-        {{fa-icon "lock-open" fixedWidth=true}}  OSINT Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Records</th>
-        </thead>
-        <tbody>
+        <h1 class="p-title">
+            {{fa-icon "brain" fixedWidth=true}}  OSINT Details
+        </h1>
         {{#each details.osint as |result resultIndex|}}
-            <tr>Source: <b>{{{result.source}}}</b></tr>
-            <tr>Source URL: <b>{{{result.sourceUrl}}}</b></tr>
-            <tr>Tags: <b>{{{result.tags}}}</b></tr>
-            <tr>In Report: <b>{{{result.inReport}}}</b></tr><br>
+            <div class="mb-2">
+                <div>
+                    <span class="p-key">Source: </span>
+                    <span class="p-value">{{result.source}}</span>
+                </div>
+                <div>
+                    <span class="p-key">Source URL: </span>
+                    <span class="p-value">{{result.sourceUrl}}</span>
+                </div>
+                {{#if (gt result.inReport 0)}}
+                    <div>
+                        <span class="p-key">In Report: </span>
+                        {{#each result.inReport as | report | }}
+                            <div class="p-value">{{report}}</div>
+                        {{/each}}
+                    </div>
+                {{/if}}
+                {{#each result.tags as | tag | }}
+                    <span class="tag">{{tag}}</span>
+                {{/each}}
+            </div>
         {{/each}}
-        </tbody>
-    </table>
+    {{else}}
+        <div class="alert alert-info mt-2" role="alert">
+            No Open Source Intelligence Found
+        </div>
     {{/if}}
+{{/if}}
 
-  {{/if}}
 
-  {{#if (eq activeTab "subdomains")}}
-  <table style="width: 100%">
-      <thead>
-      <th>All Known Subdomains</th>
-      </thead>
-      <tbody>
-        {{#if details.passive.subdomains}}
-        {{#each details.passive.subdomains as |sub|}}
-          <a href="https://community.riskiq.com/search/{{{sub}}}.{{{block.entity.value}}}">{{{sub}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a><br>
-        {{/each}}
-        {{/if}}
-      </tbody>
-  </table>
-  {{/if}}
-
-  {{#if (eq activeTab "whois")}}
+{{#if (eq activeTab "whois")}}
     {{#if details.whois}}
-    <h1 class="p-title">
-        {{fa-icon "question" fixedWidth=true}}  Whois Information
-    </h1>
-    <div>
-        <span class="p-key">Contact Email: </span>
-        <span class="p-value"><a href="https://community.riskiq.com/search/whois/email/{{details.whois.contactEmail}}">{{details.whois.contactEmail}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-    </div>
-    <div>
-        <span class="p-key">Organization: </span>
-        <span class="p-value"><a href="https://community.riskiq.com/search/whois/organization/{{details.whois.organization}}">{{details.whois.organization}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-    </div>
-    <div>
-        <span class="p-key">Registrar: </span>
-        <span class="p-value">{{details.whois.registrar}}</span>
-    </div>
-    <div>
-        <span class="p-key">Name: </span>
-        <span class="p-value"><a href="https://community.riskiq.com/search/whois/name/{{details.whois.name}}">{{details.whois.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-    </div>
-    <div>
-        <span class="p-key">Last Loaded At: </span>
-        <span class="p-value">{{details.whois.lastLoadedAt}}</span>
-    </div>
-    <div>
-        <span class="p-key">Telephone: </span>
-        <span class="p-value"><a href="https://community.riskiq.com/search/whois/phone/{{details.whois.telephone}}">{{details.whois.telephone}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-    </div>
-    <div>
-        <span class="p-key">Registry Updated At: </span>
-        <span class="p-value">{{details.whois.registryUpdatedAt}}</span>
-    </div>
-    <div>
-        <span class="p-key">Whois Server: </span>
-        <span class="p-value">{{details.whois.whoisServer}}</span>
-    </div>
-    <div>
-      <span class="p-key">Name Server(s): </span><br>
-      {{#each details.whois.nameServers as |ns|}}
-        <a href="https://community.riskiq.com/search/whois/nameserver/{{{ns}}}">{{{ns}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a><br>
-      {{/each}}
-    </div>
-    <h1 class="p-title">
-        {{fa-icon "dollar-sign" fixedWidth=true}}  Billing Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Attribute</th>
-        <th>Value</th>
-        </thead>
-        <tbody>
-        {{#if details.whois.billing}}
-        {{#each-in details.whois.billing as |key value|}}
-            <tr>
-                <td>{{{key}}}</td>
-                <td>{{{value}}}</td>
-            </tr>
-        {{/each-in}}
-        {{/if}}
-        </tbody>
-    </table>
-    <h1 class="p-title">
-        {{fa-icon "registered" fixedWidth=true}}  Registrant Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Attribute</th>
-        <th>Value</th>
-        </thead>
-        <tbody>
-        {{#if details.whois.registrant}}
-        {{#each-in details.whois.registrant as |key value|}}
-            <tr>
-                <td>{{{key}}}</td>
-                <td>{{{value}}}</td>
-            </tr>
-        {{/each-in}}
-        {{/if}}
-        </tbody>
-    </table>
-    <h1 class="p-title">
-        {{fa-icon "crown" fixedWidth=true}}  Admin Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Attribute</th>
-        <th>Value</th>
-        </thead>
-        <tbody>
-        {{#if details.whois.admin}}
-        {{#each-in details.whois.admin as |key value|}}
-            <tr>
-                <td>{{{key}}}</td>
-                <td>{{{value}}}</td>
-            </tr>
-        {{/each-in}}
-        {{/if}}
-        </tbody>
-    </table>
-    {{#if details.whois.tech}}
-    <h1 class="p-title">
-        {{fa-icon "desktop" fixedWidth=true}}  Tech Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Attribute</th>
-        <th>Value</th>
-        </thead>
-        <tbody>
-        {{#each-in details.whois.tech as |key value|}}
-            <tr>
-                <td>{{{key}}}</td>
-                <td>{{{value}}}</td>
-            </tr>
-        {{/each-in}}
-        </tbody>
-    </table>
-    {{/if}}
-    {{/if}}
-  {{/if}}
+        {{#each details.whois as | whois whoisIndex| }}
+            {{#if (gt whoisIndex 0)}}
+                <hr>
+            {{/if}}
+            <h1 class="p-title">
+                {{fa-icon "question" fixedWidth=true}}  Whois Information
+            </h1>
+            {{#if whois.contactEmail}}
+                <div>
+                    <span class="p-key">Contact Email: </span>
+                    <span class="p-value"><a href="https://community.riskiq.com/search/whois/email/{{whois.contactEmail}}">{{whois.contactEmail}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                </div>
+            {{/if}}
 
-  {{#if (eq activeTab "passivedns")}}
-    {{#if details.totalRecords}}
-    <h1 class="p-title">
-        {{fa-icon "globe" fixedWidth=true}}  Passive DNS Overview
-    </h1>
-    <div>
-        <span class="p-key">Total Records: </span>
-        <span class="p-value">{{details.totalRecords}}</span>
-    </div>
-    <div>
-        <span class="p-key">First Seen: </span>
-        <span class="p-value">{{details.firstSeen}}</span>
-    </div>
-    <div>
-        <span class="p-key">Last Seen: </span>
-        <span class="p-value">{{details.lastSeen}}</span>
-    </div>
-    <h1 class="p-title">
-        {{fa-icon "info" fixedWidth=true}}  Record Details
-    </h1>
-    <table style="width: 100%">
-        <thead>
-        <th>Records</th>
-        </thead>
-        <tbody>
-        {{#each details.results as |result resultIndex|}}
-            <tr>Value: <b>{{{result.value}}}</b></tr>
-            <tr>First Seen: <b>{{{result.firstSeen}}}</b></tr>
-            <tr>Last Seen: <b>{{{result.lastSeen}}}</b></tr>
-            <tr>Collected: <b>{{{result.collected}}}</b></tr>
-            <tr>Resolve: <a href="https://community.riskiq.com/search/{{{result.resolve}}}">{{{result.resolve}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></tr>
-            <tr>Record Type: <b>{{{result.recordType}}}</b></tr>
-            <tr>Resolve Type: <b>{{{result.resolveType}}}</b></tr>
-            <tr>Source: <b>{{{result.source}}}</b></tr><br>
+            {{#unless (eq whois.organization "N/A")}}
+            <div>
+                <span class="p-key">Organization: </span>
+                <span class="p-value"><a href="https://community.riskiq.com/search/whois/organization/{{whois.organization}}">{{whois.organization}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+            </div>
+            {{/unless}}
+
+            <div>
+                <span class="p-key">Registrar: </span>
+                <span class="p-value">{{whois.registrar}}</span>
+            </div>
+
+            {{#unless (eq whois.name "N/A")}}
+                <div>
+                    <span class="p-key">Name: </span>
+                    <span class="p-value"><a href="https://community.riskiq.com/search/whois/name/{{whois.name}}">{{whois.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                </div>
+            {{/unless}}
+
+            <div>
+                <span class="p-key">Last Loaded At: </span>
+                <span class="p-value">{{moment-format whois.lastLoadedAt "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+            </div>
+
+            {{#unless (eq whois.name "N/A")}}
+                <div>
+                    <span class="p-key">Telephone: </span>
+                    <span class="p-value"><a href="https://community.riskiq.com/search/whois/phone/{{whois.telephone}}">{{whois.telephone}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                </div>
+            {{/unless}}
+
+            <div>
+                <span class="p-key">Registry Updated At: </span>
+                <span class="p-value">{{moment-format whois.registryUpdatedAt "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+            </div>
+            <div>
+                <span class="p-key">Whois Server: </span>
+                <span class="p-value">{{whois.whoisServer}}</span>
+            </div>
+            <div>
+                <span class="p-key">Name Server(s): </span><br>
+                {{#each whois.nameServers as |ns|}}
+                    <a href="https://community.riskiq.com/search/whois/nameserver/{{{ns}}}">{{{ns}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a><br>
+                {{/each}}
+            </div>
+
+            {{#if whois.hasBilling}}
+                <h1 class="p-title">
+                    {{fa-icon "dollar-sign" fixedWidth=true}}  Billing Details
+                </h1>
+                {{#each-in whois.billing as |key value|}}
+                    <div>
+                        <span class="p-key">{{capitalize key}}: </span>
+                        <span class="p-value">{{value}}</span>
+                    </div>
+                {{/each-in}}
+            {{/if}}
+
+
+            {{#if whois.hasRegistrant}}
+                <h1 class="p-title">
+                    {{fa-icon "registered" fixedWidth=true}} Registrant Details
+                </h1>
+                {{#each-in whois.registrant as |key value|}}
+                    <div>
+                        <span class="p-key">{{capitalize key}}: </span>
+                        <span class="p-value">{{value}}</span>
+                    </div>
+                {{/each-in}}
+            {{/if}}
+
+
+            {{#if whois.hasAdmin}}
+                <h1 class="p-title">
+                    {{fa-icon "crown" fixedWidth=true}} Admin Details
+                </h1>
+                {{#each-in whois.admin as |key value|}}
+                    <div>
+                        <span class="p-key">{{capitalize key}}: </span>
+                        <span class="p-value">{{value}}</span>
+                    </div>
+                {{/each-in}}
+            {{/if}}
+
+            {{#if whois.hasTech}}
+                <h1 class="p-title">
+                    {{fa-icon "desktop" fixedWidth=true}}  Tech Details
+                </h1>
+                {{#each-in whois.tech as |key value|}}
+                    <div>
+                        <span class="p-key">{{capitalize key}}: </span>
+                        <span class="p-value">{{value}}</span>
+                    </div>
+                {{/each-in}}
+            {{/if}}
         {{/each}}
-        </tbody>
-    </table>
     {{/if}}
-  {{/if}}
-
-{{/unless}}
+{{/if}}

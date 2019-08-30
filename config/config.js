@@ -22,9 +22,8 @@ module.exports = {
    * @type String
    * @optional
    */
-  description:
-    'PassiveTotal centralizes numerous data sets into a single platform, making it easier for our community and customers to conduct infrastructure analysis. Our primary focus is to provide as much data as possible about Internet infrastructure.',
-  entityTypes: ['domain', 'IPv4'],
+  description: 'Performs WHOIS lookups on domains and email addresses against the PassiveTotal whois dataset.',
+  entityTypes: ['domain', 'email'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -48,14 +47,6 @@ module.exports = {
     template: {
       file: './templates/pt-block.hbs'
     }
-  },
-  summary: {
-      component: {
-          file: './component/pt-summary.js'
-      },
-      template: {
-          file: './templates/pt-summary.hbs'
-      }
   },
   request: {
     // Provide the path to your certFile. Leave an empty string to ignore this option.
@@ -117,7 +108,8 @@ module.exports = {
     {
       key: 'records',
       name: 'Number of Associated Records to Return',
-      description: 'Number of associated Malware, pDNS and OSINT records to return. Please note the higher the number to longer it will take for the query to return',
+      description:
+        'Number of associated Malware, pDNS and OSINT records to return. Please note the higher the number to longer it will take for the query to return',
       default: 10,
       type: 'number',
       userCanEdit: true,
