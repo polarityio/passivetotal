@@ -137,19 +137,23 @@ function _getSummaryTags(entity, results) {
   let tagMap = new Map();
   results.forEach((result) => {
     if (entity.type === 'email') {
-      tagMap.set(result.name.toLowerCase(), result.name);
-      if (result.hasRegistrant) {
+      if (typeof result.name === 'string') {
+        tagMap.set(result.name.toLowerCase(), result.name);
+      }
+      if (result.hasRegistrant && result.registrant && typeof result.registrant.country === 'string') {
         tagMap.set(result.registrant.country.toLowerCase(), result.registrant.country);
       }
     }
     if (entity.type === 'domain') {
-      if (result.organization !== 'N/A') {
+      if (typeof result.organization === 'string' && result.organization !== 'N/A') {
         tagMap.set(result.organization.toLowerCase(), `Org: ${result.organization}`);
       }
 
-      tagMap.set(result.registrar.toLowerCase(), `Registrar: ${result.registrar}`);
+      if (typeof result.registrar === 'string') {
+        tagMap.set(result.registrar.toLowerCase(), `Registrar: ${result.registrar}`);
+      }
 
-      if (result.hasRegistrant) {
+      if (typeof result.hasRegistrant === 'string') {
         tagMap.set(result.registrant.country.toLowerCase(), `Country: ${result.registrant.country}`);
       }
     }
