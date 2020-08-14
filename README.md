@@ -35,11 +35,11 @@ PassiveTotal API Key
 ### Number of Associated Records to Return
 Number of associated Malware, pDNS and OSINT records to return. Please note the higher the number to longer it will take for the query to return. Default is set to 10.
 
-### Blacklist Domains
-List of domains  that you never want to send to Domain Tools
+### Ignore List
+List of domains  that you never want to send to PassiveTotal.
 
-### Domain Blacklist Regex
-Domains that match the given regex will not be looked up (if blank, no domains will be black listed)
+### Ignore Domain Regex
+Domains that match the given regex will not be looked up.
 
 
 ## Installation Instructions
