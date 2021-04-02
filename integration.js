@@ -87,9 +87,15 @@ function doLookup(entities, options, cb) {
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      tasks.push(
-        doDetailsLookup({ path: '/v2/whois/search', qs: { query: entity.value, field: entity.type } }, entity, options)
-      );
+      if (entity.type === 'custom') {
+        tasks.push(
+          doDetailsLookup({ path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } }, entity, options)
+        );
+      } else {
+        tasks.push(
+          doDetailsLookup({ path: '/v2/whois/search', qs: { query: entity.value, field: entity.type } }, entity, options)
+        );
+      }
     }
   });
 
@@ -106,7 +112,7 @@ function doLookup(entities, options, cb) {
           entity: result.entity,
           data: null
         });
-      } else {
+      } else if (result.entity.type != 'custom'){
         result.body.results = result.body.results.splice(0, options.records);
 
         result.body.results.forEach((whois) => {
@@ -122,6 +128,22 @@ function doLookup(entities, options, cb) {
             summary: _getSummaryTags(result.entity, result.body.results),
             details: {
               whois: result.body.results
+            }
+          }
+        });
+      } else {
+        result.body.results = result.body.results.splice(0, options.records);
+
+        result.body.results.forEach((tracker) => {
+          tracker = Object.keys(tracker).length > 0;
+        });
+
+        lookupResults.push({
+          entity: result.entity,
+          data: {
+            summary: ["Tracker Count: " + result.body.results.length],
+            details: {
+              tracker: result.body.results
             }
           }
         });
@@ -174,6 +196,8 @@ function doDetailsLookup(request, entity, options) {
       json: true
     };
 
+    Logger.trace({ requestOptions }, 'Looking at the Request');
+
     requestWithDefaults(requestOptions, (error, response, body) => {
       let processedResult = handleRestError(error, entity, response, body);
 
@@ -181,7 +205,7 @@ function doDetailsLookup(request, entity, options) {
         done(processedResult.error);
         return;
       }
-
+      Logger.trace({ processedResult }, 'Looking at the Result');
       done(null, processedResult);
     });
   };
