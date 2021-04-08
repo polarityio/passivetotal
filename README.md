@@ -4,7 +4,7 @@
 
 > As whois lookups return data on nearly every domain, we recommend running this integration in "On-Demand" mode only.
 
-The Polarity - PassiveTotal integration searches PassiveTotal for Whois information on domains and emails. For domains, the integration will additionally retrieve malware and open source intelligence in the details.
+The Polarity - PassiveTotal integration searches PassiveTotal for Whois information on domains and emails. For domains, the integration will additionally retrieve malware and open source intelligence in the details. The integration will also recognize and search for details on Google Analytics Tracker ID's. 
 
 To learn more about PassiveTotal, please visit the [official website](https://www.riskiq.com/products/passivetotal/).
 
@@ -17,7 +17,7 @@ Check out the integration in action:
 
 The Polarity-PassiveTotal integration runs whois lookups against both emails and domains.  For domains, the integration will do a details lookup against malware and open source intelligence endpoints.
 
-| Entity Type | REST API Endpoints Searched | 
+| Entity Type | REST API Endpoints Searched |
 |------------|-----------------------------|
 | domain | https://api.passivetotal.org/v2/whois/search <br> https://api.passivetotal.org/v2/enrichment/malware (on details) <br> https://api.passivetotal.org/v2/enrichment/osint (on details)|
 | email | https://api.passivetotal.org/v2/whois/search |

@@ -22,8 +22,14 @@ module.exports = {
    * @type String
    * @optional
    */
-  description: 'Performs WHOIS lookups on domains and email addresses against the PassiveTotal whois dataset.',
+  description: 'Performs WHOIS lookups on domains and email addresses and searches Google Analytics Tracker IDs.',
   entityTypes: ['domain', 'email'],
+  customTypes:[
+      {
+          key: 'trackerId',
+          regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
+      }
+  ],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
