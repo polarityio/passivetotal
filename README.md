@@ -10,7 +10,7 @@ To learn more about RiskIQ Community (PassiveTotal), please visit the [official 
 
 Check out the integration in action:
 
-![passivetotal](images/overlay.gif)
+![passivetotal](images/overlay.png)
 
 ## RiskIQ Community (PassiveTotal) Requests
 
