@@ -7,27 +7,91 @@
 
 {{#if (not-eq block.entity.type "custom")}}
 {{! IPv4 and Domain output parsing}}
-  <div class="view-in-pt">
-    <a href="https://community.riskiq.com/search/{{details.queryValue}}">View in PassiveTotal {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-  </div>
-
   <ul class="nav nav-tabs">
       <li class="nav-item">
-          <a {{action "changeTab" "whois"}} class="nav-link {{if (eq activeTab "whois") "active"}}" href="#">Whois</a>
+          <a {{action "changeTab" "summary"}} class="nav-link {{if (eq activeTab "summary") "active"}}" href="#">Data Card</a>
       </li>
-      {{#if (eq block.entity.type "domain")}}
-          <li class="nav-item">
-              <a {{action "changeTab" "malware"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
-                  Malware {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.malware.length}}){{/if}}
-              </a>
-          </li>
-          <li class="nav-item">
-              <a {{action "changeTab" "osint"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (eq activeTab "osint") "active"}}" href="#">
-                  OSInt {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.osint.length}}){{/if}}
-              </a>
-          </li>
+      {{#if (eq block.userOptions.enableRep true)}}
+        <li class="nav-item">
+            <a {{action "changeTab" "reputation"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "reputation")(not activeTab)) "active"}}" href="#">
+                Reputation {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.reputation.classification}}){{/if}}
+            </a>
+        </li>
       {{/if}}
+      <li class="nav-item">
+          <a {{action "changeTab" "malware"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
+              Malware {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.malware.length}}){{/if}}
+          </a>
+      </li>
+      <li class="nav-item">
+          <a {{action "changeTab" "osint"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (eq activeTab "osint") "active"}}" href="#">
+              OSInt {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.osint.length}}){{/if}}
+          </a>
+      </li>
   </ul>
+
+  {{#if (eq activeTab "reputation")}}
+      {{#if block.isLoadingDetails}}
+          <div class="alert alert-info" role="alert">
+              Reputation Details are Loading
+          </div>
+      {{/if}}
+
+      {{#if details.reputation}}
+          <h1 class="p-title">
+              {{fa-icon "user-secret" fixedWidth=true}}  Reputation Details
+          </h1>
+          {{#if details.reputation.score}}
+            <div>
+                <span class="p-key">Score: </span>
+                <span class="p-value">{{details.reputation.score}}</span>
+            </div>
+          {{/if}}
+          {{#if details.reputation.classification}}
+            <div>
+                <span class="p-key">Classification: </span>
+                <span class="p-value"><b>{{details.reputation.classification}}</b></span>
+            </div>
+          {{/if}}
+          {{#each details.reputation.rules as |rule ruleIndex|}}
+              {{#if (gt ruleIndex 0)}}
+                <hr>
+              {{/if}}
+              <h1 class="p-title">
+                  {{fa-icon "check" fixedWidth=true}}  Rule #{{inc ruleIndex}} Detail
+              </h1>
+              <div class="mb-2">
+                  {{#if rule.link}}
+                    <div>
+                        <span class="p-key">Name: </span>
+                        <span class="p-value"><a href="{{rule.link}}">{{rule.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+                    </div>
+                  {{else}}
+                    <div>
+                        <span class="p-key">Name: </span>
+                        <span class="p-value">{{rule.name}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if rule.description}}
+                    <div>
+                        <span class="p-key">Description: </span>
+                        <span class="p-value">{{rule.description}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if rule.severity}}
+                    <div>
+                        <span class="p-key">Severity: </span>
+                        <span class="p-value">{{rule.severity}}</span>
+                    </div>
+                  {{/if}}
+              </div>
+          {{/each}}
+      {{else}}
+          <div class="alert alert-info mt-2" role="alert">
+              No Reputation Details Found
+          </div>
+      {{/if}}
+  {{/if}}
 
   {{#if (eq activeTab "malware")}}
       {{#if block.isLoadingDetails}}
@@ -80,8 +144,8 @@
                       <span class="p-value">{{result.source}}</span>
                   </div>
                   <div>
-                      <span class="p-key">Source URL: </span>
-                      <span class="p-value">{{result.sourceUrl}}</span>
+                      <span class="p-key">Name: </span>
+                      <span class="p-value"><a href="{{result.sourceUrl}}">{{result.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
                   </div>
                   {{#if (gt result.inReport 0)}}
                       <div>
@@ -104,118 +168,125 @@
   {{/if}}
 
 
-  {{#if (eq activeTab "whois")}}
-      {{#if details.whois}}
-          {{#each details.whois as | whois whoisIndex| }}
-              {{#if (gt whoisIndex 0)}}
-                  <hr>
-              {{/if}}
-              <h1 class="p-title">
-                  {{fa-icon "question" fixedWidth=true}}  Whois Information
-              </h1>
-              {{#if whois.contactEmail}}
-                  <div>
-                      <span class="p-key">Contact Email: </span>
-                      <span class="p-value"><a href="https://community.riskiq.com/search/whois/email/{{whois.contactEmail}}">{{whois.contactEmail}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-                  </div>
-              {{/if}}
-
-              {{#unless (eq whois.organization "N/A")}}
-              <div>
-                  <span class="p-key">Organization: </span>
-                  <span class="p-value"><a href="https://community.riskiq.com/search/whois/organization/{{whois.organization}}">{{whois.organization}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-              </div>
-              {{/unless}}
-
-              <div>
-                  <span class="p-key">Registrar: </span>
-                  <span class="p-value">{{whois.registrar}}</span>
-              </div>
-
-              {{#unless (eq whois.name "N/A")}}
-                  <div>
-                      <span class="p-key">Name: </span>
-                      <span class="p-value"><a href="https://community.riskiq.com/search/whois/name/{{whois.name}}">{{whois.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-                  </div>
-              {{/unless}}
-
-              <div>
-                  <span class="p-key">Last Loaded At: </span>
-                  <span class="p-value">{{moment-format whois.lastLoadedAt "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-              </div>
-
-              {{#unless (eq whois.name "N/A")}}
-                  <div>
-                      <span class="p-key">Telephone: </span>
-                      <span class="p-value"><a href="https://community.riskiq.com/search/whois/phone/{{whois.telephone}}">{{whois.telephone}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-                  </div>
-              {{/unless}}
-
-              <div>
-                  <span class="p-key">Registry Updated At: </span>
-                  <span class="p-value">{{moment-format whois.registryUpdatedAt "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-              </div>
-              <div>
-                  <span class="p-key">Whois Server: </span>
-                  <span class="p-value">{{whois.whoisServer}}</span>
-              </div>
-              <div>
-                  <span class="p-key">Name Server(s): </span><br>
-                  {{#each whois.nameServers as |ns|}}
-                      <a href="https://community.riskiq.com/search/whois/nameserver/{{{ns}}}">{{{ns}}} {{fa-icon "external-link-square" class="external-link-icon"}}</a><br>
-                  {{/each}}
-              </div>
-
-              {{#if whois.hasBilling}}
-                  <h1 class="p-title">
-                      {{fa-icon "dollar-sign" fixedWidth=true}}  Billing Details
-                  </h1>
-                  {{#each-in whois.billing as |key value|}}
-                      <div>
-                          <span class="p-key">{{capitalize key}}: </span>
-                          <span class="p-value">{{value}}</span>
-                      </div>
-                  {{/each-in}}
-              {{/if}}
-
-
-              {{#if whois.hasRegistrant}}
-                  <h1 class="p-title">
-                      {{fa-icon "registered" fixedWidth=true}} Registrant Details
-                  </h1>
-                  {{#each-in whois.registrant as |key value|}}
-                      <div>
-                          <span class="p-key">{{capitalize key}}: </span>
-                          <span class="p-value">{{value}}</span>
-                      </div>
-                  {{/each-in}}
-              {{/if}}
-
-
-              {{#if whois.hasAdmin}}
-                  <h1 class="p-title">
-                      {{fa-icon "crown" fixedWidth=true}} Admin Details
-                  </h1>
-                  {{#each-in whois.admin as |key value|}}
-                      <div>
-                          <span class="p-key">{{capitalize key}}: </span>
-                          <span class="p-value">{{value}}</span>
-                      </div>
-                  {{/each-in}}
-              {{/if}}
-
-              {{#if whois.hasTech}}
-                  <h1 class="p-title">
-                      {{fa-icon "desktop" fixedWidth=true}}  Tech Details
-                  </h1>
-                  {{#each-in whois.tech as |key value|}}
-                      <div>
-                          <span class="p-key">{{capitalize key}}: </span>
-                          <span class="p-value">{{value}}</span>
-                      </div>
-                  {{/each-in}}
-              {{/if}}
-          {{/each}}
+  {{#if (eq activeTab "summary")}}
+      <h1 class="p-title">
+          {{fa-icon "id-card" fixedWidth=true}}  Summary Card Details
+      </h1>
+      {{#if details.name}}
+        <div>
+            <span class="p-key">Name: </span>
+            <span class="p-value"><a href="{{details.link}}">{{details.name}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+        </div>
+      {{/if}}
+      {{#if details.type}}
+        <div>
+            <span class="p-key">Type: </span>
+            <span class="p-value">{{details.type}}</span>
+        </div>
+      {{/if}}
+      {{#if details.netblock}}
+        {{#if (not-eq details.netblock "n/a")}}
+          <div>
+              <span class="p-key">Netblock: </span>
+              <span class="p-value">{{details.netblock}}</span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.os}}
+        {{#if (not-eq details.os "n/a")}}
+          <div>
+              <span class="p-key">OS: </span>
+              <span class="p-value">{{details.os}}</span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.asn}}
+        {{#if (not-eq details.asn "n/a")}}
+          <div>
+              <span class="p-key">ASN: </span>
+              <span class="p-value">{{details.asn}}</span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.hosting_provider}}
+        {{#if (not-eq details.hosting_provider "n/a")}}
+          <div>
+              <span class="p-key">Hosting Provider: </span>
+              <span class="p-value">{{details.hosting_provider}}</span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.resolutions}}
+        {{#if (gt details.data_summary.resolutions.count 0)}}
+          <div>
+              <span class="p-key">Resolutions: </span>
+              <span class="p-value"><a href="{{details.data_summary.resolutions.link}}">{{details.data_summary.resolutions.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.certificates}}
+        {{#if (gt details.data_summary.certificates.count 0)}}
+          <div>
+              <span class="p-key">Certificates: </span>
+              <span class="p-value"><a href="{{details.data_summary.certificates.link}}">{{details.data_summary.certificates.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.hashes}}
+        {{#if (gt details.data_summary.hashes.count 0)}}
+          <div>
+              <span class="p-key">Hashes: </span>
+              <span class="p-value"><a href="{{details.data_summary.hashes.link}}">{{details.data_summary.hashes.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.projects}}
+        {{#if (gt details.data_summary.projects.count 0)}}
+          <div>
+              <span class="p-key">Projects: </span>
+              <span class="p-value"><a href="{{details.data_summary.projects.link}}">{{details.data_summary.projects.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.articles}}
+        {{#if (gt details.data_summary.articles.count 0)}}
+          <div>
+              <span class="p-key">Articles: </span>
+              <span class="p-value"><a href="{{details.data_summary.articles.link}}">{{details.data_summary.articles.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.trackers}}
+        {{#if (gt details.data_summary.trackers.count 0)}}
+          <div>
+              <span class="p-key">Trackers: </span>
+              <span class="p-value"><a href="{{details.data_summary.trackers.link}}">{{details.data_summary.trackers.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.components}}
+        {{#if (gt details.data_summary.components.count 0)}}
+          <div>
+              <span class="p-key">Components: </span>
+              <span class="p-value"><a href="{{details.data_summary.components.link}}">{{details.data_summary.components.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.host_pairs}}
+        {{#if (gt details.data_summary.host_pairs.count 0)}}
+          <div>
+              <span class="p-key">Host Pairs: </span>
+              <span class="p-value"><a href="{{details.data_summary.host_pairs.link}}">{{details.data_summary.host_pairs.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
+      {{/if}}
+      {{#if details.data_summary.cookies}}
+        {{#if (gt details.data_summary.cookies.count 0)}}
+          <div>
+              <span class="p-key">Cookies: </span>
+              <span class="p-value"><a href="{{details.data_summary.cookies.link}}">{{details.data_summary.cookies.count}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+          </div>
+        {{/if}}
       {{/if}}
   {{/if}}
 {{/if}}

@@ -5,7 +5,7 @@ module.exports = {
    * @type String
    * @required
    */
-  name: 'PassiveTotal',
+  name: 'RiskIQ Community (PassiveTotal)',
   /**
    * The acronym that appears in the notification window when information from this integration
    * is displayed.  Note that the acronym is included as part of each "tag" in the summary information
@@ -22,8 +22,8 @@ module.exports = {
    * @type String
    * @optional
    */
-  description: 'Performs WHOIS lookups on domains and email addresses and searches Google Analytics Tracker IDs.',
-  entityTypes: ['domain', 'email'],
+  description: 'RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.',
+  entityTypes: ['domain', 'ipv4'],
   customTypes:[
       {
           key: 'trackerId',
@@ -38,6 +38,7 @@ module.exports = {
    * @optional
    */
   styles: ['./styles/pt.less'],
+  defaultColor: 'light-blue',
   /**
    * Provide custom component logic and template for rendering the integration details block.  If you do not
    * provide a custom template and/or component then the integration will display data as a table of key value
@@ -86,8 +87,8 @@ module.exports = {
   options: [
     {
       key: 'host',
-      name: 'PassiveTotal API URL',
-      description: 'The URL of the PassiveTotal API including the schema (i.e., https://)',
+      name: 'RiskIQ Community (PassiveTotal) API URL',
+      description: 'The URL of the RiskIQ Community (PassiveTotal) API including the schema (i.e., https://)',
       default: 'https://api.passivetotal.org',
       type: 'text',
       userCanEdit: false,
@@ -96,7 +97,7 @@ module.exports = {
     {
       key: 'user',
       name: 'API Username',
-      description: 'Valid PassiveTotal Username',
+      description: 'Valid RiskIQ Community (PassiveTotal) Username',
       default: '',
       type: 'text',
       userCanEdit: true,
@@ -105,7 +106,7 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'Valid PassiveTotal API Key',
+      description: 'Valid RiskIQ Community (PassiveTotal) API Key',
       default: '',
       type: 'password',
       userCanEdit: true,
@@ -115,9 +116,19 @@ module.exports = {
       key: 'records',
       name: 'Number of Associated Records to Return',
       description:
-        'Number of associated Malware, pDNS and OSINT records to return. Please note the higher the number to longer it will take for the query to return',
+        'Total number of Malware and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return',
       default: 10,
       type: 'number',
+      userCanEdit: true,
+      adminOnly: false
+    },
+    {
+      key: 'enableRep',
+      name: 'Enable Reputation Lookup',
+      description:
+        'If checked, the integration will perform an optional onDetails API request to retrieve the entity reputation details.  This option requires additional privileged API access.',
+      default: false,
+      type: 'boolean',
       userCanEdit: true,
       adminOnly: false
     },

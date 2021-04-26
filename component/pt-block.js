@@ -4,7 +4,7 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
-  activeTab: 'whois',
+  activeTab: 'summary',
   errorMsg: '',
   actions: {
     changeTab: function(tabName) {

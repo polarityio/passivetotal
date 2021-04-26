@@ -89,12 +89,14 @@ function doLookup(entities, options, cb) {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       if (entity.type === 'custom') {
         tasks.push(
-          doDetailsLookup({ path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } }, entity, options)
+          doDetailsLookup(
+            { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
+            entity,
+            options
+          )
         );
       } else {
-        tasks.push(
-          doDetailsLookup({ path: '/v2/whois/search', qs: { query: entity.value, field: entity.type } }, entity, options)
-        );
+        tasks.push(doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options));
       }
     }
   });
@@ -107,28 +109,40 @@ function doLookup(entities, options, cb) {
     }
 
     results.forEach((result) => {
-      if (result.body === null) {
+      if (
+        !result.body ||
+        result.body === null ||
+        (result.entity.type != 'custom' &&
+          result.body.data_summary.resolutions.count === 0 &&
+          result.body.data_summary.certificates.count === 0 &&
+          result.body.data_summary.hashes.count === 0 &&
+          result.body.data_summary.projects.count === 0 &&
+          result.body.data_summary.articles.count === 0 &&
+          result.body.data_summary.trackers.count === 0 &&
+          result.body.data_summary.components.count === 0 &&
+          result.body.data_summary.host_pairs.count === 0 &&
+          result.body.data_summary.cookies.count === 0)
+      ) {
         lookupResults.push({
           entity: result.entity,
           data: null
         });
-      } else if (result.entity.type != 'custom'){
-        result.body.results = result.body.results.splice(0, options.records);
-
-        result.body.results.forEach((whois) => {
-          whois.hasTech = Object.keys(whois.tech).length > 0;
-          whois.hasBilling = Object.keys(whois.billing).length > 0;
-          whois.hasRegistrant = Object.keys(whois.registrant).length > 0;
-          whois.hasAdmin = Object.keys(whois.admin).length > 0;
-        });
-
+      } else if (result.entity.type != 'custom') {
         lookupResults.push({
           entity: result.entity,
           data: {
-            summary: _getSummaryTags(result.entity, result.body.results),
-            details: {
-              whois: result.body.results
-            }
+            summary: [
+              'Resolutions: ' + result.body.data_summary.resolutions.count,
+              'Certificates: ' + result.body.data_summary.certificates.count,
+              'Hashes: ' + result.body.data_summary.hashes.count,
+              'Projects: ' + result.body.data_summary.projects.count,
+              'Articles: ' + result.body.data_summary.articles.count,
+              'Trackers: ' + result.body.data_summary.trackers.count,
+              'Components: ' + result.body.data_summary.components.count,
+              'Host Pairs: ' + result.body.data_summary.host_pairs.count,
+              'Cookies: ' + result.body.data_summary.cookies.count
+            ],
+            details: result.body
           }
         });
       } else {
@@ -141,7 +155,7 @@ function doLookup(entities, options, cb) {
         lookupResults.push({
           entity: result.entity,
           data: {
-            summary: ["Tracker Count: " + result.body.results.length],
+            summary: ['Trackers:' + result.body.results.length],
             details: {
               tracker: result.body.results
             }
@@ -155,36 +169,8 @@ function doLookup(entities, options, cb) {
   });
 }
 
-function _getSummaryTags(entity, results) {
-  let tagMap = new Map();
-  results.forEach((result) => {
-    if (entity.type === 'email') {
-      if (typeof result.name === 'string') {
-        tagMap.set(result.name.toLowerCase(), result.name);
-      }
-      if (result.hasRegistrant && result.registrant && typeof result.registrant.country === 'string') {
-        tagMap.set(result.registrant.country.toLowerCase(), result.registrant.country);
-      }
-    }
-    if (entity.type === 'domain') {
-      if (typeof result.organization === 'string' && result.organization !== 'N/A') {
-        tagMap.set(result.organization.toLowerCase(), `Org: ${result.organization}`);
-      }
-
-      if (typeof result.registrar === 'string') {
-        tagMap.set(result.registrar.toLowerCase(), `Registrar: ${result.registrar}`);
-      }
-
-      if (typeof result.hasRegistrant === 'string') {
-        tagMap.set(result.registrant.country.toLowerCase(), `Country: ${result.registrant.country}`);
-      }
-    }
-  });
-  return [...tagMap.values()];
-}
-
 function doDetailsLookup(request, entity, options) {
-  return function(done) {
+  return function (done) {
     let requestOptions = {
       method: 'GET',
       uri: `${options.host}${request.path}`,
@@ -213,7 +199,40 @@ function doDetailsLookup(request, entity, options) {
 
 function onDetails(lookupObject, options, cb) {
   let entity = lookupObject.entity;
-  if (entity.type === 'domain') {
+  if (entity.type === 'domain' || entity.type === 'IPv4' && options.enableRep === true) {
+    async.parallel(
+      {
+        malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options),
+        osint: doDetailsLookup({ path: '/v2/enrichment/osint', qs: { query: entity.value } }, entity, options),
+        reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
+      },
+      (err, results) => {
+        if (err) {
+          return cb(err);
+        }
+
+        lookupObject.data.details.malware = [];
+        lookupObject.data.details.osint = [];
+        lookupObject.data.details.reputation = [];
+
+        if (results.malware.body !== null) {
+          lookupObject.data.details.malware = results.malware.body.results.splice(0, options.records);
+        }
+
+        if (results.osint.body !== null) {
+          lookupObject.data.details.osint = results.osint.body.results.splice(0, options.records);
+        }
+
+        if (results.reputation.body !== null) {
+          lookupObject.data.details.reputation = results.reputation.body;
+        }
+
+        Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
+
+        cb(null, lookupObject.data);
+      }
+    );
+  } else if (entity.type === 'domain' || entity.type === 'IPv4' && options.enableRep != true){
     async.parallel(
       {
         malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options),
@@ -240,7 +259,8 @@ function onDetails(lookupObject, options, cb) {
         cb(null, lookupObject.data);
       }
     );
-  } else {
+  }
+  else {
     cb(null, lookupObject.data);
   }
 }
@@ -255,20 +275,11 @@ function handleRestError(error, entity, res, body) {
     };
   }
 
-  if (res.statusCode === 200 && Array.isArray(body.results) && body.results.length > 0) {
+  if (res.statusCode === 200 && body) {
     // we got data!
     result = {
       entity: entity,
       body: body
-    };
-  } else if (
-    (res.statusCode === 200 && Array.isArray(body.results) && body.results.length === 0) ||
-    res.statusCode === 404
-  ) {
-    // no result found
-    result = {
-      entity: entity,
-      body: null
     };
   } else if (res.statusCode === 401) {
     result = {
