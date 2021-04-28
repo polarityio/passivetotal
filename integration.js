@@ -132,15 +132,7 @@ function doLookup(entities, options, cb) {
           entity: result.entity,
           data: {
             summary: [
-              'Resolutions: ' + result.body.data_summary.resolutions.count,
-              'Certificates: ' + result.body.data_summary.certificates.count,
-              'Hashes: ' + result.body.data_summary.hashes.count,
-              'Projects: ' + result.body.data_summary.projects.count,
-              'Articles: ' + result.body.data_summary.articles.count,
-              'Trackers: ' + result.body.data_summary.trackers.count,
-              'Components: ' + result.body.data_summary.components.count,
-              'Host Pairs: ' + result.body.data_summary.host_pairs.count,
-              'Cookies: ' + result.body.data_summary.cookies.count
+              'Resolutions: ' + result.body.data_summary.resolutions.count + ', Articles: ' + result.body.data_summary.articles.count + ', Certs: ' + result.body.data_summary.certificates.count + ', Hashes: ' + result.body.data_summary.hashes.count + ', Host Pairs: ' + result.body.data_summary.host_pairs.count + ', Projects: ' + result.body.data_summary.projects.count + ', Trackers: ' + result.body.data_summary.trackers.count + ', Components: ' + result.body.data_summary.components.count
             ],
             details: result.body
           }
