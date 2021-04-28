@@ -1,46 +1,43 @@
-# Polarity PassiveTotal Integration
+# Polarity RiskIQ Community (PassiveTotal) Integration
 
 ![mode:on demand only](https://img.shields.io/badge/mode-on%20demand%20only-blue.svg)
 
-> As whois lookups return data on nearly every domain, we recommend running this integration in "On-Demand" mode only.
+> As lookups return data on nearly every IPv4 address and domain, we recommend running this integration in "On-Demand" mode only.
 
-The Polarity - PassiveTotal integration searches PassiveTotal for Whois information on domains and emails. For domains, the integration will additionally retrieve malware and open source intelligence in the details. The integration will also recognize and search for details on Google Analytics Tracker ID's. 
+The Polarity RiskIQ Community (PassiveTotal) integration retrieves the "Data Summary Card" for both IPv4 addresses and domains. The integration will also perform an on-details lookup against malware and open source intelligence endpoints.  Furthermore, the integration will also recognize Google Tracker ID's (i.e. UA-XXXXXX-X) and return a list of associated entities that have the identified tracker present.
 
-To learn more about PassiveTotal, please visit the [official website](https://www.riskiq.com/products/passivetotal/).
-
+To learn more about RiskIQ Community (PassiveTotal), please visit the [official website](https://community.riskiq.com/).
 
 Check out the integration in action:
 
-![passivetotal](images/overlay.gif)
+![passivetotal](images/overlay.png)
 
-## PassiveTotal Requests
-
-The Polarity-PassiveTotal integration runs whois lookups against both emails and domains.  For domains, the integration will do a details lookup against malware and open source intelligence endpoints.
+## RiskIQ Community (PassiveTotal) Requests
 
 | Entity Type | REST API Endpoints Searched |
 |------------|-----------------------------|
-| domain | https://api.passivetotal.org/v2/whois/search <br> https://api.passivetotal.org/v2/enrichment/malware (on details) <br> https://api.passivetotal.org/v2/enrichment/osint (on details)|
-| email | https://api.passivetotal.org/v2/whois/search |
-## PassiveTotal Integration Options
+| IPv4 and Domain | https://api.passivetotal.org/v2/cards/summary <br> https://api.passivetotal.org/v2/enrichment/malware (on details) <br> https://api.passivetotal.org/v2/enrichment/osint (on details)|
+| Google Tracker ID's | https://api.passivetotal.org/v2/trackers/search |
 
-### PassiveTotal Api URL
-The URL of the PassiveTotal API including the schema (i.e., https://). Default is set to:  https://api.passivetotal.org
+## RiskIQ Community (PassiveTotal) Integration Options
 
-### PassiveTotal Api Username
+### RiskIQ Community (PassiveTotal) API URL
+The URL of the RiskIQ Community (PassiveTotal) API including the schema (i.e., https://). Default is set to:  https://api.passivetotal.org
+
+### RiskIQ Community (PassiveTotal) Api Username
 PassiveTotal Username, used to access the API.
 
-### PassiveTotal ApiKey
+### RiskIQ Community (PassiveTotal) ApiKey
 PassiveTotal API Key
 
 ### Number of Associated Records to Return
-Number of associated Malware, pDNS and OSINT records to return. Please note the higher the number to longer it will take for the query to return. Default is set to 10.
+Total number of associated Malware and OSINT records to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Default is set to 10.
 
 ### Ignore List
-List of domains  that you never want to send to PassiveTotal.
+List of domains that you never want to send to PassiveTotal.
 
 ### Ignore Domain Regex
 Domains that match the given regex will not be looked up.
-
 
 ## Installation Instructions
 
