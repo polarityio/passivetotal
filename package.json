@@ -1,11 +1,12 @@
 {
   "main": "./integration.js",
   "name": "PassiveTotal",
-  "version": "3.3.1-beta",
+  "version": "3.4.0-beta",
   "private": true,
   "dependencies": {
-    "request": "^2.88.2",
     "async": "^3.2.0",
-    "lodash": "^4.17.19"
+    "lodash": "^4.17.19",
+    "node-cache": "^5.1.2",
+    "request": "^2.88.2"
   }
 }
