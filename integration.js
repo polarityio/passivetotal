@@ -2,9 +2,32 @@
 
 const request = require('request');
 const _ = require('lodash');
+const {
+  flow,
+  get,
+  getOr,
+  slice,
+  orderBy,
+  filter,
+  includes,
+  __,
+  flatMap,
+  find,
+  map,
+  toLower,
+  concat,
+  uniqWith,
+  isEqual
+} = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+
+const NodeCache = require('node-cache');
+
+const articlesCache = new NodeCache({
+  stdTTL: 5 * 60
+});
 
 let Logger;
 let requestWithDefaults;
@@ -17,7 +40,10 @@ const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
 const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
-
+const INDICATOR_TYPES = {
+  domain: ['url', 'domain', 'domain_port'],
+  IPv4: ['ip_port', 'ip']
+};
 /**
  *
  * @param entities
@@ -132,7 +158,22 @@ function doLookup(entities, options, cb) {
           entity: result.entity,
           data: {
             summary: [
-              'Resolutions: ' + result.body.data_summary.resolutions.count + ', Articles: ' + result.body.data_summary.articles.count + ', Certs: ' + result.body.data_summary.certificates.count + ', Hashes: ' + result.body.data_summary.hashes.count + ', Host Pairs: ' + result.body.data_summary.host_pairs.count + ', Projects: ' + result.body.data_summary.projects.count + ', Trackers: ' + result.body.data_summary.trackers.count + ', Components: ' + result.body.data_summary.components.count
+              'Resolutions: ' +
+                result.body.data_summary.resolutions.count +
+                ', Articles: ' +
+                result.body.data_summary.articles.count +
+                ', Certs: ' +
+                result.body.data_summary.certificates.count +
+                ', Hashes: ' +
+                result.body.data_summary.hashes.count +
+                ', Host Pairs: ' +
+                result.body.data_summary.host_pairs.count +
+                ', Projects: ' +
+                result.body.data_summary.projects.count +
+                ', Trackers: ' +
+                result.body.data_summary.trackers.count +
+                ', Components: ' +
+                result.body.data_summary.components.count
             ],
             details: result.body
           }
@@ -191,71 +232,86 @@ function doDetailsLookup(request, entity, options) {
 
 function onDetails(lookupObject, options, cb) {
   let entity = lookupObject.entity;
-  if (entity.type === 'domain' || entity.type === 'IPv4' && options.enableRep === true) {
+  if (entity.type === 'domain' || entity.type === 'IPv4') {
+    const articles = articlesCache.get('articles');
     async.parallel(
       {
+        whois: doDetailsLookup({ path: '/v2/whois', qs: { query: entity.value } }, entity, options),
+        pdns: doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options),
         malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options),
-        osint: doDetailsLookup({ path: '/v2/enrichment/osint', qs: { query: entity.value } }, entity, options),
-        reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
+        certificates: doDetailsLookup(
+          {
+            path: '/v2/ssl-certificate/search',
+            qs: { query: entity.value, field: 'subjectCommonName' }
+          },
+          entity,
+          options
+        ),
+        ...(!articles
+          ? {
+              articles: doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options)
+            }
+          : { articles: (done) => done(null, articles) }),
+        ...(options.enableRep && {
+          reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
+        }),
+        ...(options.enablePairs && {
+          parentPairs: doDetailsLookup(
+            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
+            entity,
+            options
+          ),
+          childPairs: doDetailsLookup(
+            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
+            entity,
+            options
+          )
+        })
       },
-      (err, results) => {
-        if (err) {
-          return cb(err);
-        }
+      (err, { whois, pdns, certificates, malware, reputation, parentPairs, childPairs, articles }) => {
+        if (err) return cb(err);
 
-        lookupObject.data.details.malware = [];
-        lookupObject.data.details.osint = [];
-        lookupObject.data.details.reputation = [];
+        if (articles) articlesCache.set('articles', articles);
 
-        if (results.malware.body !== null) {
-          lookupObject.data.details.malware = results.malware.body.results.splice(0, options.records);
-        }
+        lookupObject.data.details = {
+          ...lookupObject.data.details,
+          whois: getBody(whois),
+          pdns: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+          certificates: getRecords(options.records, certificates),
+          malware: getRecords(options.records, malware),
+          reputation: getBody(reputation),
+          pairs: flow(
+            concat(getRecords(options.records, parentPairs)),
+            uniqWith(isEqual)
+          )(getRecords(options.records, childPairs)),
 
-        if (results.osint.body !== null) {
-          lookupObject.data.details.osint = results.osint.body.results.splice(0, options.records);
-        }
-
-        if (results.reputation.body !== null) {
-          lookupObject.data.details.reputation = results.reputation.body;
-        }
+          articles: searchArticles(entity, articles)
+        };
 
         Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
 
         cb(null, lookupObject.data);
       }
     );
-  } else if (entity.type === 'domain' || entity.type === 'IPv4' && options.enableRep != true){
-    async.parallel(
-      {
-        malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options),
-        osint: doDetailsLookup({ path: '/v2/enrichment/osint', qs: { query: entity.value } }, entity, options)
-      },
-      (err, results) => {
-        if (err) {
-          return cb(err);
-        }
-
-        lookupObject.data.details.malware = [];
-        lookupObject.data.details.osint = [];
-
-        if (results.malware.body !== null) {
-          lookupObject.data.details.malware = results.malware.body.results.splice(0, options.records);
-        }
-
-        if (results.osint.body !== null) {
-          lookupObject.data.details.osint = results.osint.body.results.splice(0, options.records);
-        }
-
-        Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
-
-        cb(null, lookupObject.data);
-      }
-    );
-  }
-  else {
+  } else {
     cb(null, lookupObject.data);
   }
 }
+const getBody = getOr([], 'body');
+const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
+const searchArticles = (entity, articles) =>
+  flow(
+    get('body.articles'),
+    filter(
+      flow(
+        get('indicators'),
+        filter(flow(get('type'), includes(__, get(entity.type, INDICATOR_TYPES)))),
+        flatMap(get('values')),
+        map(toLower),
+        find(includes(flow(get('value'), toLower)(entity)))
+      )
+    )
+  )(articles);
 
 function handleRestError(error, entity, res, body) {
   let result;
