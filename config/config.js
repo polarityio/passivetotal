@@ -22,13 +22,14 @@ module.exports = {
    * @type String
    * @optional
    */
-  description: 'RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.',
+  description:
+    'RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.',
   entityTypes: ['domain', 'ipv4'],
-  customTypes:[
-      {
-          key: 'trackerId',
-          regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
-      }
+  customTypes: [
+    {
+      key: 'trackerId',
+      regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
+    }
   ],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -133,6 +134,16 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'enablePairs',
+      name: 'Enable Host Pairs Lookup',
+      description:
+        'If checked, the integration will perform an optional onDetails API request to retrieve the entity host pairs details.  This option requires additional privileged API access.',
+      default: false,
+      type: 'boolean',
+      userCanEdit: true,
+      adminOnly: false
+    },
+    {
       key: 'blocklist',
       name: 'Ignore List',
       description: 'List of domains and IPs that you never want to send to PassiveTotal',
@@ -144,8 +155,7 @@ module.exports = {
     {
       key: 'domainBlocklistRegex',
       name: 'Ignore Domain Regex',
-      description:
-        'Domains that match the given regex will not be looked up.',
+      description: 'Domains that match the given regex will not be looked up.',
       default: '',
       type: 'text',
       userCanEdit: false,
