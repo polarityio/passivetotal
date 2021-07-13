@@ -137,17 +137,16 @@ function doLookup(entities, options, cb) {
     results.forEach((result) => {
       if (
         !result.body ||
-        result.body === null ||
-        (result.entity.type != 'custom' &&
-          result.body.data_summary.resolutions.count === 0 &&
-          result.body.data_summary.certificates.count === 0 &&
-          result.body.data_summary.hashes.count === 0 &&
-          result.body.data_summary.projects.count === 0 &&
-          result.body.data_summary.articles.count === 0 &&
-          result.body.data_summary.trackers.count === 0 &&
-          result.body.data_summary.components.count === 0 &&
-          result.body.data_summary.host_pairs.count === 0 &&
-          result.body.data_summary.cookies.count === 0)
+        (get('entity.type', result) !== 'custom' &&
+          get('body.data_summary.resolutions.count', result) === 0 &&
+          get('body.data_summary.certificates.count', result) === 0 &&
+          get('body.data_summary.hashes.count', result) === 0 &&
+          get('body.data_summary.projects.count', result) === 0 &&
+          get('body.data_summary.articles.count', result) === 0 &&
+          get('body.data_summary.trackers.count', result) === 0 &&
+          get('body.data_summary.components.count', result) === 0 &&
+          get('body.data_summary.host_pairs.count', result) === 0 &&
+          get('body.data_summary.cookies.count', result) === 0)
       ) {
         lookupResults.push({
           entity: result.entity,
