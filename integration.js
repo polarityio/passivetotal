@@ -158,27 +158,27 @@ function doLookup(entities, options, cb) {
           data: {
             summary: [
               'Resolutions: ' +
-                result.body.data_summary.resolutions.count +
+                get('body.data_summary.resolutions.count', result) +
                 ', Articles: ' +
-                result.body.data_summary.articles.count +
+                get('body.data_summary.articles.count', result) +
                 ', Certs: ' +
-                result.body.data_summary.certificates.count +
+                get('body.data_summary.certificates.count', result) +
                 ', Hashes: ' +
-                result.body.data_summary.hashes.count +
+                get('body.data_summary.hashes.count', result) +
                 ', Host Pairs: ' +
-                result.body.data_summary.host_pairs.count +
+                get('body.data_summary.host_pairs.count', result) +
                 ', Projects: ' +
-                result.body.data_summary.projects.count +
+                get('body.data_summary.projects.count', result) +
                 ', Trackers: ' +
-                result.body.data_summary.trackers.count +
+                get('body.data_summary.trackers.count', result) +
                 ', Components: ' +
-                result.body.data_summary.components.count
+                get('body.data_summary.components.count', result)
             ],
             details: result.body
           }
         });
       } else {
-        result.body.results = result.body.results.splice(0, options.records);
+        result.body.results = flow(get('body.results'), slice(0, options.records))(result);
 
         result.body.results.forEach((tracker) => {
           tracker = Object.keys(tracker).length > 0;
