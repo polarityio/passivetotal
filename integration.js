@@ -2,28 +2,15 @@
 
 const request = require('request');
 const _ = require('lodash');
-const {
-  flow,
-  get,
-  getOr,
-  slice,
-  orderBy,
-  filter,
-  includes,
-  __,
-  flatMap,
-  find,
-  map,
-  toLower,
-  concat,
-  uniqWith,
-  isEqual
-} = require('lodash/fp');
+const { flow, get, slice, orderBy, concat, uniqWith, isEqual } = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+const Bottleneck = require('bottleneck/es5');
+let limiter;
 
 const NodeCache = require('node-cache');
+const { result } = require('lodash');
 
 const articlesCache = new NodeCache({
   stdTTL: 5 * 60
@@ -38,12 +25,8 @@ let ipBlocklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
-const INDICATOR_TYPES = {
-  domain: ['url', 'domain', 'domain_port'],
-  IPv4: ['ip_port', 'ip']
-};
+
 /**
  *
  * @param entities
@@ -77,6 +60,15 @@ function startup(logger) {
   requestWithDefaults = request.defaults(defaults);
 }
 
+function _setupLimiter(options) {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10), // no more than 5 lookups can be running at single time
+    highWater: 50, // no more than 50 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10) // don't run lookups faster than 1 every 200 ms
+  });
+}
+
 function _setupRegexBlocklists(options) {
   if (options.domainBlocklistRegex !== previousDomainRegexAsString && options.domainBlocklistRegex.length === 0) {
     Logger.debug('Removing Domain Blocklist Regex Filtering');
@@ -101,104 +93,6 @@ function _setupRegexBlocklists(options) {
       ipBlocklistRegex = new RegExp(options.ipBlocklistRegex, 'i');
     }
   }
-}
-
-function doLookup(entities, options, cb) {
-  let lookupResults = [];
-  let tasks = [];
-
-  _setupRegexBlocklists(options);
-
-  Logger.debug(entities);
-
-  entities.forEach((entity) => {
-    if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      if (entity.type === 'custom') {
-        tasks.push(
-          doDetailsLookup(
-            { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
-            entity,
-            options
-          )
-        );
-      } else {
-        tasks.push(doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options));
-      }
-    }
-  });
-
-  async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
-    if (err) {
-      Logger.error({ err: err }, 'Error');
-      cb(err);
-      return;
-    }
-
-    results.forEach((result) => {
-      if (
-        !result.body ||
-        (get('entity.type', result) !== 'custom' &&
-          get('body.data_summary.resolutions.count', result) === 0 &&
-          get('body.data_summary.certificates.count', result) === 0 &&
-          get('body.data_summary.hashes.count', result) === 0 &&
-          get('body.data_summary.projects.count', result) === 0 &&
-          get('body.data_summary.articles.count', result) === 0 &&
-          get('body.data_summary.trackers.count', result) === 0 &&
-          get('body.data_summary.components.count', result) === 0 &&
-          get('body.data_summary.host_pairs.count', result) === 0 &&
-          get('body.data_summary.cookies.count', result) === 0)
-      ) {
-        lookupResults.push({
-          entity: result.entity,
-          data: null
-        });
-      } else if (result.entity.type != 'custom') {
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: [
-              'Resolutions: ' +
-                get('body.data_summary.resolutions.count', result) +
-                ', Articles: ' +
-                get('body.data_summary.articles.count', result) +
-                ', Certs: ' +
-                get('body.data_summary.certificates.count', result) +
-                ', Hashes: ' +
-                get('body.data_summary.hashes.count', result) +
-                ', Host Pairs: ' +
-                get('body.data_summary.host_pairs.count', result) +
-                ', Projects: ' +
-                get('body.data_summary.projects.count', result) +
-                ', Trackers: ' +
-                get('body.data_summary.trackers.count', result) +
-                ', Components: ' +
-                get('body.data_summary.components.count', result)
-            ],
-            details: result.body
-          }
-        });
-      } else {
-        result.body.results = flow(get('body.results'), slice(0, options.records))(result);
-
-        result.body.results.forEach((tracker) => {
-          tracker = Object.keys(tracker).length > 0;
-        });
-
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: ['Trackers:' + result.body.results.length],
-            details: {
-              tracker: result.body.results
-            }
-          }
-        });
-      }
-    });
-
-    Logger.trace({ lookupResults }, 'Results');
-    cb(null, lookupResults);
-  });
 }
 
 function doDetailsLookup(request, entity, options) {
@@ -229,7 +123,181 @@ function doDetailsLookup(request, entity, options) {
   };
 }
 
+function doLookup(entities, options, cb) {
+  let lookupResults = [];
+
+  if (!limiter) _setupLimiter(options);
+
+  _setupRegexBlocklists(options);
+
+  Logger.debug(entities);
+
+  entities.forEach((entity) => {
+    limiter.submit(getCustomEntityDetails, entity, options, (err, results) => {
+      if (err) {
+        Logger.error({ err: err }, 'Error');
+        cb(err);
+        return;
+      }
+
+      results.forEach((result) => {
+        if (
+          !result.body ||
+          (get('entity.type', result) !== 'custom' &&
+            get('body.data_summary.resolutions.count', result) === 0 &&
+            get('body.data_summary.certificates.count', result) === 0 &&
+            get('body.data_summary.hashes.count', result) === 0 &&
+            get('body.data_summary.projects.count', result) === 0 &&
+            get('body.data_summary.articles.count', result) === 0 &&
+            get('body.data_summary.trackers.count', result) === 0 &&
+            get('body.data_summary.components.count', result) === 0 &&
+            get('body.data_summary.host_pairs.count', result) === 0 &&
+            get('body.data_summary.cookies.count', result) === 0)
+        ) {
+          lookupResults.push({
+            entity: result.entity,
+            data: null
+          });
+        } else if (result.entity.type != 'custom') {
+          lookupResults.push({
+            entity: result.entity,
+            data: {
+              summary: [
+                'Resolutions: ' +
+                  get('body.data_summary.resolutions.count', result) +
+                  ', Articles: ' +
+                  get('body.data_summary.articles.count', result) +
+                  ', Certs: ' +
+                  get('body.data_summary.certificates.count', result) +
+                  ', Hashes: ' +
+                  get('body.data_summary.hashes.count', result) +
+                  ', Host Pairs: ' +
+                  get('body.data_summary.host_pairs.count', result) +
+                  ', Projects: ' +
+                  get('body.data_summary.projects.count', result) +
+                  ', Trackers: ' +
+                  get('body.data_summary.trackers.count', result) +
+                  ', Components: ' +
+                  get('body.data_summary.components.count', result)
+              ],
+              details: result.body
+            }
+          });
+        } else {
+          result.body.results = flow(get('body.results'), slice(0, options.records))(result);
+
+          result.body.results.forEach((tracker) => {
+            tracker = Object.keys(tracker).length > 0;
+          });
+
+          lookupResults.push({
+            entity: result.entity,
+            data: {
+              summary: ['Trackers:' + result.body.results.length],
+              details: {
+                tracker: result.body.results
+              }
+            }
+          });
+        }
+      });
+    });
+  });
+  Logger.trace({ lookupResults }, 'Results');
+  cb(null, lookupResults);
+}
+
 function onDetails(lookupObject, options, cb) {
+  const lookupResults = [];
+  const errors = [];
+  let numConnectionResets = 0;
+  let numThrottled = 0;
+  let hasValidIndicator = false;
+
+  if (!limiter) _setupLimiter(options);
+
+  limiter.submit(getEntityDetailsData, lookupObject, options, (err, results) => {
+    const maxRequestQueueLimitHit =
+      (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+
+    const statusCode = _.get(err, 'errors[0].status', '');
+    const isGatewayTimeout = statusCode === '502' || statusCode === '504';
+    const isConnectionReset = _.get(err, 'errors[0].meta.err.code', '') === 'ECONNRESET';
+
+    if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
+      if (isConnectionReset || isGatewayTimeout) {
+        numConnectionResets++;
+      }
+      if (maxRequestQueueLimitHit) {
+        numThrottled++;
+      }
+
+      const resultObject = {
+        entity,
+        isVolatile: true,
+        data: {
+          summary: ['Search Limit Reached'],
+          details: {}
+        }
+      };
+
+      resultObject.data.details = {
+        maxRequestQueueLimitHit,
+        isConnectionReset,
+        isGatewayTimeout
+      };
+
+      lookupResults.push(resultObject);
+    } else if (err) {
+      errors.push(err);
+    } else {
+      lookupResults.push(result);
+    }
+
+    if (lookupResults.length + errors.length === entities.length) {
+      if (numConnectionResets > 0 || numThrottled > 0) {
+        Logger.warn(
+          {
+            numEntitiesLookedUp: entities.length,
+            numConnectionResets: numConnectionResets,
+            numLookupsThrottled: numThrottled
+          },
+          'Lookup Limit Error'
+        );
+      }
+
+      if (errors.length > 0) {
+        cb(errors);
+      } else {
+        cb(null, lookupResults);
+      }
+    }
+  });
+
+  if (!hasValidIndicator) {
+    cb(null, blockedEntities);
+  }
+}
+
+const getCustomEntityDetails = (entity, options, cb) => {
+  let lookupResults = [];
+  if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
+    if (entity.type === 'custom') {
+      lookupResults.push(
+        doDetailsLookup(
+          { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
+          entity,
+          options
+        )
+      );
+    } else {
+      lookupResults.push(doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options));
+    }
+  }
+  cb(null, lookupResults);
+};
+
+function getEntityDetailsData(lookupObject, options, cb) {
   let entity = lookupObject.entity;
   if (entity.type === 'domain' || entity.type === 'IPv4') {
     const articles = articlesCache.get('articles');
@@ -296,22 +364,9 @@ function onDetails(lookupObject, options, cb) {
     cb(null, lookupObject.data);
   }
 }
-const getBody = getOr([], 'body');
-const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
-const searchArticles = (entity, articles) =>
-  flow(
-    get('body.articles'),
-    filter(
-      flow(
-        get('indicators'),
-        filter(flow(get('type'), includes(__, get(entity.type, INDICATOR_TYPES)))),
-        flatMap(get('values')),
-        map(toLower),
-        find(includes(flow(get('value'), toLower)(entity)))
-      )
-    )
-  )(articles);
-
+/*
+  Helpers
+*/
 function handleRestError(error, entity, res, body) {
   let result;
 
