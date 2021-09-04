@@ -2,21 +2,36 @@
 
 const request = require('request');
 const _ = require('lodash');
-const { flow, get, slice, orderBy, concat, uniqWith, isEqual } = require('lodash/fp');
+const {
+  flow,
+  get,
+  getOr,
+  slice,
+  orderBy,
+  filter,
+  includes,
+  __,
+  flatMap,
+  find,
+  map,
+  toLower,
+  concat,
+  uniqWith,
+  isEqual
+} = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
 const Bottleneck = require('bottleneck/es5');
-let limiter;
 
 const NodeCache = require('node-cache');
-const { result } = require('lodash');
 
 const articlesCache = new NodeCache({
   stdTTL: 5 * 60
 });
 
 let Logger;
+let limiter = null;
 let requestWithDefaults;
 let previousDomainRegexAsString = '';
 let previousIpRegexAsString = '';
@@ -26,7 +41,10 @@ let ipBlocklistRegex = null;
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
-
+const INDICATOR_TYPES = {
+  domain: ['url', 'domain', 'domain_port'],
+  IPv4: ['ip_port', 'ip']
+};
 /**
  *
  * @param entities
@@ -95,32 +113,26 @@ function _setupRegexBlocklists(options) {
   }
 }
 
-function doDetailsLookup(request, entity, options) {
-  return function (done) {
-    let requestOptions = {
-      method: 'GET',
-      uri: `${options.host}${request.path}`,
-      auth: {
-        user: options.user,
-        pass: options.apiKey
-      },
-      qs: request.qs,
-      json: true
-    };
-
-    Logger.trace({ requestOptions }, 'Looking at the Request');
-
-    requestWithDefaults(requestOptions, (error, response, body) => {
-      let processedResult = handleRestError(error, entity, response, body);
-
-      if (processedResult.error) {
-        done(processedResult.error);
-        return;
-      }
-      Logger.trace({ processedResult }, 'Looking at the Result');
-      done(null, processedResult);
-    });
-  };
+function getCustomEntityDetails(entity, options, cb) {
+  let lookupResults = [];
+  if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
+    if (entity.type === 'custom') {
+      lookupResults.push(
+        doDetailsLookup(
+          { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
+          entity,
+          options,
+          cb
+        )
+      );
+    } else {
+      lookupResults.push(
+        // this is returning an empty object, not the processedResults from the requestWithDefaults
+        doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options, cb)
+      );
+    }
+  }
+  cb(null, lookupResults);
 }
 
 function doLookup(entities, options, cb) {
@@ -134,12 +146,6 @@ function doLookup(entities, options, cb) {
 
   entities.forEach((entity) => {
     limiter.submit(getCustomEntityDetails, entity, options, (err, results) => {
-      if (err) {
-        Logger.error({ err: err }, 'Error');
-        cb(err);
-        return;
-      }
-
       results.forEach((result) => {
         if (
           !result.body ||
@@ -203,9 +209,36 @@ function doLookup(entities, options, cb) {
       });
     });
   });
+
   Logger.trace({ lookupResults }, 'Results');
   cb(null, lookupResults);
 }
+
+const doDetailsLookup = async (req, entity, options, cb) => {
+  let requestOptions = {
+    method: 'GET',
+    uri: `${options.host}${req.path}`,
+    auth: {
+      user: options.user,
+      pass: options.apiKey
+    },
+    qs: req.qs,
+    json: true
+  };
+
+  Logger.trace({ requestOptions }, 'Looking at the Request');
+
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    const processedResult = handleRestError(error, entity, response, body, cb);
+
+    if (processedResult.error) {
+      cb(processedResult.error);
+      return;
+    }
+    Logger.trace({ processedResult }, 'Looking at the Result');
+    cb(null, processedResult);
+  });
+};
 
 function onDetails(lookupObject, options, cb) {
   const lookupResults = [];
@@ -279,24 +312,6 @@ function onDetails(lookupObject, options, cb) {
   }
 }
 
-const getCustomEntityDetails = (entity, options, cb) => {
-  let lookupResults = [];
-  if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-    if (entity.type === 'custom') {
-      lookupResults.push(
-        doDetailsLookup(
-          { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
-          entity,
-          options
-        )
-      );
-    } else {
-      lookupResults.push(doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options));
-    }
-  }
-  cb(null, lookupResults);
-};
-
 function getEntityDetailsData(lookupObject, options, cb) {
   let entity = lookupObject.entity;
   if (entity.type === 'domain' || entity.type === 'IPv4') {
@@ -364,17 +379,32 @@ function getEntityDetailsData(lookupObject, options, cb) {
     cb(null, lookupObject.data);
   }
 }
-/*
-  Helpers
-*/
-function handleRestError(error, entity, res, body) {
+
+const getBody = getOr([], 'body');
+const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
+const searchArticles = (entity, articles) =>
+  flow(
+    get('body.articles'),
+    filter(
+      flow(
+        get('indicators'),
+        filter(flow(get('type'), includes(__, get(entity.type, INDICATOR_TYPES)))),
+        flatMap(get('values')),
+        map(toLower),
+        find(includes(flow(get('value'), toLower)(entity)))
+      )
+    )
+  )(articles);
+
+function handleRestError(error, entity, res, body, cb) {
   let result;
 
   if (error) {
-    return {
+    result = {
       error: error,
       detail: 'HTTP Request Error'
     };
+    return;
   }
 
   if (res.statusCode === 200 && body) {
@@ -407,7 +437,6 @@ function handleRestError(error, entity, res, body) {
       }
     };
   }
-
   return result;
 }
 
