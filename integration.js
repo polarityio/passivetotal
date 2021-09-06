@@ -44,6 +44,7 @@ const INDICATOR_TYPES = {
   domain: ['url', 'domain', 'domain_port'],
   IPv4: ['ip_port', 'ip']
 };
+
 /**
  *
  * @param entities
@@ -296,6 +297,7 @@ function onDetails(lookupObject, options, cb) {
     cb(null, lookupObject.data);
   }
 }
+
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const searchArticles = (entity, articles) =>
