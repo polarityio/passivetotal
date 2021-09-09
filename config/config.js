@@ -76,7 +76,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -169,6 +169,26 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Search Requests',
+      description:
+        'Maximum number of concurrent search requests (defaults to 10).  Integration must be restarted after changing this option.',
+      default: 10,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Searches',
+      description:
+        'Minimum amount of time in milliseconds between each entity search (defaults to 25).  Integration must be restarted after changing this option.',
+      default: 25,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };
