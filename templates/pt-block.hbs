@@ -25,47 +25,68 @@
             </li>
             {{#if block.userOptions.enableRep}}
                 <li class="nav-item">
-                    <a {{action "changeTab" "reputation"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "reputation")(not activeTab)) "active"}}" href="#">
-                        Reputation {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.reputation.classification}}){{/if}}
+                    <a {{action "changeTab" "reputation"}} class="nav-link {{if (or (eq activeTab "reputation")(not activeTab)) "active"}}" href="#">
+                        Reputation {{#if block._state.searchRunning.reputation}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                        {{#if details.reputation.classification}}
+                            ({{details.reputation.classification}})
+                        {{/if}}
                     </a>
                 </li>
             {{/if}}
             {{#if block.userOptions.enablePairs}}
                 <li class="nav-item">
-                    <a {{action "changeTab" "pairs"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "pairs")(not activeTab)) "active"}}" href="#">
-                        Host Pairs {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.pairs.length}}){{/if}}
+                    <a {{action "changeTab" "pairs"}} class="nav-link {{if (or (eq activeTab "pairs")(not activeTab)) "active"}}" href="#">
+                        Host Pairs {{#if block._state.searchRunning.pairs}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                        {{#if details.pairs}}
+                            ({{details.pairs.length}})
+                        {{/if}}
                     </a>
                 </li>
             {{/if}}
             <li class="nav-item">
-                <a {{action "changeTab" "pdns"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "pdns")(not activeTab)) "active"}}" href="#">
-                    Resolutions/PDNS {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.pdns.length}}){{/if}}
+                <a {{action "changeTab" "pdns"}} class="nav-link {{if (or (eq activeTab "pdns")(not activeTab)) "active"}}" href="#">
+                    Resolutions/PDNS {{#if block._state.searchRunning.pdns}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                    {{#if details.pdns}}
+                        ({{details.pdns.length}})
+                    {{/if}}
                 </a>
             </li>
             <li class="nav-item">
-                <a {{action "changeTab" "whois"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "whois")(not activeTab)) "active"}}" href="#">
-                    WHOIS {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{if details.whois.name "Found" "Unknown"}}){{/if}}
+                <a {{action "changeTab" "whois"}} class="nav-link {{if (or (eq activeTab "whois")(not activeTab)) "active"}}" href="#">
+                    WHOIS {{#if block._state.searchRunning.whois}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                    {{#if details.whois.name}}
+                        ({{if details.whois.name "Found" "Unknown"}})
+                    {{/if}}
                 </a>
             </li>
             <li class="nav-item">
-                <a {{action "changeTab" "articles"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "articles")(not activeTab)) "active"}}" href="#">
-                    Articles {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.articles.length}}){{/if}}
+                <a {{action "changeTab" "articles"}} class="nav-link {{if (or (eq activeTab "articles")(not activeTab)) "active"}}" href="#">
+                    Articles {{#if block._state.searchRunning.articles}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                    {{#if details.articles}}
+                        ({{details.articles.length}})
+                    {{/if}}
                 </a>
             </li>
             <li class="nav-item">
-                <a {{action "changeTab" "certificates"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "certificates")(not activeTab)) "active"}}" href="#">
-                    SSL Certificates {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{else}}({{details.certificates.length}}){{/if}}
+                <a {{action "changeTab" "certificates"}} class="nav-link {{if (or (eq activeTab "certificates")(not activeTab)) "active"}}" href="#">
+            SSL Certificates {{#if block._state.searchRunning.certificates}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                    {{#if details.certificates}}
+                        ({{details.certificates.length}})
+                    {{/if}}
                 </a>
             </li>
             <li class="nav-item">
-                <a {{action "changeTab" "malware"}} class="nav-link {{if block.isLoadingDetails "disabled"}} {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
-                    Malware {{#if block.isLoadingDetails}}{{fa-icon "spinner-third" fixedWisdth=true spin=true class="loading-icon"}}{{else}}({{details.malware.length}}){{/if}}
+                <a {{action "changeTab" "malware"}} class="nav-link {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
+            Malware {{#if block._state.searchRunning.malware}}{{fa-icon "spinner-third" fixedWisdth=true spin=true class="loading-icon"}}{{/if}}
+                {{#if details.malware}}
+                    ({{details.malware.length}})
+                {{/if}}
                 </a>
             </li>
         </ul>
 
         {{#if (eq activeTab "pairs")}}
-            {{#if searchRunning.pairs}}
+            {{#if block._state.searchRunning.pairs}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Host Pairs
                 </div>
@@ -119,7 +140,7 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "pdns")}}
-            {{#if searchRunning.pdns}}
+            {{#if block._state.searchRunning.pdns}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Resolution/PDNS
                 </div>
@@ -203,7 +224,7 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "whois")}}
-            {{#if searchRunning.whois}}
+            {{#if block._state.searchRunning.whois}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading WHOIS
                 </div>
@@ -472,7 +493,7 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "articles")}}
-            {{#if searchRunning.articles}}
+            {{#if block._state.searchRunning.articles}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Articles
                 </div>
@@ -543,7 +564,7 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "certificates")}}
-            {{#if searchRunning.certificates}}
+            {{#if block._state.searchRunning.certificates}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading SSL Certificates
                 </div>
@@ -767,7 +788,7 @@
         {{/if}}
 
         {{#if (eq activeTab "reputation")}}
-            {{#if searchRunning.reputation}}
+            {{#if block._state.searchRunning.reputation}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Reputation
                 </div>
@@ -830,7 +851,7 @@
         {{/if}}
 
         {{#if (eq activeTab "malware")}}
-            {{#if searchRunning.malware}}
+            {{#if block._state.searchRunning.malware}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Malware
                 </div>

@@ -300,72 +300,72 @@ function doDetailsLookup(request, entity, options, cb) {
   });
 }
 
-function onDetails(lookupObject, options, cb) {
-  let entity = lookupObject.entity;
-  if (entity.type === 'domain' || entity.type === 'IPv4') {
-    const articles = articlesCache.get('articles');
-    async.parallel(
-      {
-        whois: doDetailsLookup({ path: '/v2/whois', qs: { query: entity.value } }, entity, options), // fast 112 ms
-        pdns: doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options), // fast 3.3 seconds
-        malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options), // fast 282 ms
-        certificates: doDetailsLookup(
-          {
-            path: '/v2/ssl-certificate/search', // 4.41 seconds
-            qs: { query: entity.value, field: 'subjectCommonName' }
-          },
-          entity,
-          options
-        ),
-        ...(!articles
-          ? {
-              articles: doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options) // fast 156ms
-            }
-          : { articles: (done) => done(null, articles) }),
-        ...(options.enableRep && {
-          reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
-        }),
-        ...(options.enablePairs && {
-          parentPairs: doDetailsLookup(
-            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
-            entity,
-            options
-          ),
-          childPairs: doDetailsLookup(
-            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
-            entity,
-            options
-          )
-        })
-      },
-      (err, { whois, pdns, certificates, malware, reputation, parentPairs, childPairs, articles }) => {
-        if (err) return cb(err);
-
-        if (articles) articlesCache.set('articles', articles);
-
-        lookupObject.data.details = {
-          summary: lookupObject.data.details,
-          whois: getBody(whois),
-          pdns: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
-          certificates: getRecords(options.records, certificates),
-          malware: getRecords(options.records, malware),
-          reputation: getBody(reputation),
-          pairs: flow(
-            concat(getRecords(options.records, parentPairs)),
-            uniqWith(isEqual)
-          )(getRecords(options.records, childPairs)),
-          articles: searchArticles(entity, articles)
-        };
-
-        Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
-
-        cb(null, lookupObject.data);
-      }
-    );
-  } else {
-    cb(null, lookupObject.data);
-  }
-}
+// function onDetails(lookupObject, options, cb) {
+//   let entity = lookupObject.entity;
+//   if (entity.type === 'domain' || entity.type === 'IPv4') {
+//     const articles = articlesCache.get('articles');
+//     async.parallel(
+//       {
+//         whois: doDetailsLookup({ path: '/v2/whois', qs: { query: entity.value } }, entity, options), // fast 112 ms
+//         pdns: doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options), // fast 3.3 seconds
+//         malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options), // fast 282 ms
+//         certificates: doDetailsLookup(
+//           {
+//             path: '/v2/ssl-certificate/search', // 4.41 seconds
+//             qs: { query: entity.value, field: 'subjectCommonName' }
+//           },
+//           entity,
+//           options
+//         ),
+//         ...(!articles
+//           ? {
+//               articles: doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options) // fast 156ms
+//             }
+//           : { articles: (done) => done(null, articles) }),
+//         ...(options.enableRep && {
+//           reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
+//         }),
+//         ...(options.enablePairs && {
+//           parentPairs: doDetailsLookup(
+//             { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
+//             entity,
+//             options
+//           ),
+//           childPairs: doDetailsLookup(
+//             { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
+//             entity,
+//             options
+//           )
+//         })
+//       },
+//       (err, { whois, pdns, certificates, malware, reputation, parentPairs, childPairs, articles }) => {
+//         if (err) return cb(err);
+//
+//         if (articles) articlesCache.set('articles', articles);
+//
+//         lookupObject.data.details = {
+//           summary: lookupObject.data.details,
+//           whois: getBody(whois),
+//           pdns: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+//           certificates: getRecords(options.records, certificates),
+//           malware: getRecords(options.records, malware),
+//           reputation: getBody(reputation),
+//           pairs: flow(
+//             concat(getRecords(options.records, parentPairs)),
+//             uniqWith(isEqual)
+//           )(getRecords(options.records, childPairs)),
+//           articles: searchArticles(entity, articles)
+//         };
+//
+//         Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
+//
+//         cb(null, lookupObject.data);
+//       }
+//     );
+//   } else {
+//     cb(null, lookupObject.data);
+//   }
+// }
 
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
@@ -566,6 +566,24 @@ function onMessage(payload, options, cb) {
         if (err) return cb(err);
         cb(null, { data: getBody(reputation) });
       });
+      break;
+    case 'articles':
+      const articles = articlesCache.get('articles');
+      if (articles) {
+        cb(null, {
+          data: searchArticles(entity, articles)
+        });
+      } else {
+        doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options, (err, articles) => {
+          Logger.info(articles);
+          if (err) return cb(err);
+          if (articles) articlesCache.set('articles', articles);
+          cb(null, {
+            data: searchArticles(entity, articles)
+          });
+        });
+      }
+      break;
   }
 }
 
