@@ -5,7 +5,7 @@
     </div>
 {{/if}}
 
-{{#if (or details.isConnectionReset details.maxRequestQueueLimitHit details.isGatewayTimeout details.apiKeyLimitReached)}}
+{{#if (or details.summary.isConnectionReset details.summary.maxRequestQueueLimitHit details.summary.isGatewayTimeout details.summary.apiKeyLimitReached)}}
     <button type="button" class="btn btn-polarity btn-sm retry-btn"{{action "retrySearch" "summary"}}>
         {{#if running}}
             {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
@@ -37,7 +37,7 @@
                 <li class="nav-item">
                     <a {{action "changeTab" "pairs"}} class="nav-link {{if (or (eq activeTab "pairs")(not activeTab)) "active"}}" href="#">
                         Host Pairs {{#if block._state.searchRunning.pairs}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                        {{#if details.pairs}}
+                        {{#if pairsIsLoaded}}
                             ({{details.pairs.length}})
                         {{/if}}
                     </a>
@@ -46,7 +46,7 @@
             <li class="nav-item">
                 <a {{action "changeTab" "pdns"}} class="nav-link {{if (or (eq activeTab "pdns")(not activeTab)) "active"}}" href="#">
                     Resolutions/PDNS {{#if block._state.searchRunning.pdns}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if details.pdns}}
+                    {{#if pdnsIsLoaded}}
                         ({{details.pdns.length}})
                     {{/if}}
                 </a>
@@ -62,7 +62,7 @@
             <li class="nav-item">
                 <a {{action "changeTab" "articles"}} class="nav-link {{if (or (eq activeTab "articles")(not activeTab)) "active"}}" href="#">
                     Articles {{#if block._state.searchRunning.articles}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if details.articles}}
+                    {{#if articlesIsLoaded}}
                         ({{details.articles.length}})
                     {{/if}}
                 </a>
@@ -70,7 +70,7 @@
             <li class="nav-item">
                 <a {{action "changeTab" "certificates"}} class="nav-link {{if (or (eq activeTab "certificates")(not activeTab)) "active"}}" href="#">
             SSL Certificates {{#if block._state.searchRunning.certificates}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if details.certificates}}
+                    {{#if certificatesIsLoaded}}
                         ({{details.certificates.length}})
                     {{/if}}
                 </a>
@@ -78,7 +78,7 @@
             <li class="nav-item">
                 <a {{action "changeTab" "malware"}} class="nav-link {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
             Malware {{#if block._state.searchRunning.malware}}{{fa-icon "spinner-third" fixedWisdth=true spin=true class="loading-icon"}}{{/if}}
-                {{#if details.malware}}
+                {{#if malwareIsLoaded}}
                     ({{details.malware.length}})
                 {{/if}}
                 </a>
@@ -86,9 +86,20 @@
         </ul>
 
         {{#if (eq activeTab "pairs")}}
-            {{#if block._state.searchRunning.pairs}}
+            {{#if (and block._state.searchRunning.pairs (not block._state.initialLoadAttempted.pairs))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Host Pairs
+                </div>
+            {{else if (or details.pairs.isConnectionReset details.pairs.maxRequestQueueLimitHit details.pairs.isGatewayTimeout details.pairs.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pairs"}}>
+                    {{#if block._state.searchRunning.pairs}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry Pairs Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
                 </div>
             {{else}}
                 {{#if details.pairs.length}}
@@ -140,9 +151,20 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "pdns")}}
-            {{#if block._state.searchRunning.pdns}}
+            {{#if (and block._state.searchRunning.pdns (not block._state.initialLoadAttempted.pdns))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Resolution/PDNS
+                </div>
+            {{else if (or details.pdns.isConnectionReset details.pdns.maxRequestQueueLimitHit details.pdns.isGatewayTimeout details.pdns.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pdns"}}>
+                    {{#if block._state.searchRunning.pdns}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry PDNS Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
                 </div>
             {{else}}
                 {{#if details.pdns.length}}
@@ -224,9 +246,42 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "whois")}}
-            {{#if block._state.searchRunning.whois}}
+            {{#if (and block._state.searchRunning.whois (not block._state.initialLoadAttempted.whois))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading WHOIS
+                </div>
+            {{else if (or details.whois.isConnectionReset details.whois.maxRequestQueueLimitHit details.whois.isGatewayTimeout details.whois.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "whois"}}>
+                    {{#if block._state.searchRunning.whois}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry WHOIS Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    {{#if details.whois.onMessageTimeout}}
+                        <span class="p-footnote">The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{else if details.whois.apiKeyLimitReached}}
+                        <span class="p-footnote">You have reached your PassiveTotal API Search Quota. You can retry your search after your quota has reset by pressing the "Retry Search" button.</span>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-footnote">API Searches: {{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-footnote">Quota Duration: {{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-footnote">Next Quota Reset: {{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{else}}
+                        <span class="p-footnote">A PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.whois.name}}
@@ -493,9 +548,24 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "articles")}}
-            {{#if block._state.searchRunning.articles}}
+            {{#if (and block._state.searchRunning.articles (not block._state.initialLoadAttempted.articles))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Articles
+                </div>
+            {{else if (or details.articles.isConnectionReset details.articles.maxRequestQueueLimitHit details.articles.isGatewayTimeout details.articles.apiKeyLimitReached details.articles.onMessageTimeout)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "articles"}}>
+                    {{#if block._state.searchRunning.articles}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry Articles Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    {{#if details.articles.onMessageTimeout}}
+                        <span class="p-footnote">The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{else}}
+                        <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.articles.length}}
@@ -564,9 +634,20 @@
             {{/if}}
         {{/if}}
         {{#if (eq activeTab "certificates")}}
-            {{#if block._state.searchRunning.certificates}}
+            {{#if (and block._state.searchRunning.certificates (not block._state.initialLoadAttempted.certificates))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading SSL Certificates
+                </div>
+            {{else if (or details.certificates.isConnectionReset details.certificates.maxRequestQueueLimitHit details.certificates.isGatewayTimeout details.certificates.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "certificates"}}>
+                    {{#if block._state.searchRunning.certificates}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry Certificates Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
                 </div>
             {{else}}
                 {{#if details.certificates.length}}
@@ -788,9 +869,20 @@
         {{/if}}
 
         {{#if (eq activeTab "reputation")}}
-            {{#if block._state.searchRunning.reputation}}
+            {{#if (and block._state.searchRunning.reputation (not block._state.initialLoadAttempted.reputation))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Reputation
+                </div>
+            {{else if (or details.reputation.isConnectionReset details.reputation.maxRequestQueueLimitHit details.reputation.isGatewayTimeout details.reputation.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "reputation"}}>
+                    {{#if block._state.searchRunning.reputation}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry Reputation Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
                 </div>
             {{else}}
                 {{#if details.reputation}}
@@ -851,9 +943,20 @@
         {{/if}}
 
         {{#if (eq activeTab "malware")}}
-            {{#if block._state.searchRunning.malware}}
+            {{#if (and block._state.searchRunning.malware (not block._state.initialLoadAttempted.malware))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Malware
+                </div>
+            {{else if (or details.malware.isConnectionReset details.malware.maxRequestQueueLimitHit details.malware.isGatewayTimeout details.malware.apiKeyLimitReached)}}
+                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "malware"}}>
+                    {{#if block._state.searchRunning.malware}}
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                    {{else}}
+                        Retry Malware Search
+                    {{/if}}
+                </button>
+                <div class="mt-1">
+                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
                 </div>
             {{else}}
                 {{#if details.malware}}
@@ -888,6 +991,7 @@
             <h1 class="p-title">
                 {{fa-icon "id-card" fixedWidth=true}}  Summary Card Details
             </h1>
+
             {{#if summary.name}}
                 <div>
                     <span class="p-key">Name: </span>
@@ -1004,6 +1108,63 @@
                 </div>
                 {{/if}}
             {{/if}}
+            <div class="mt-1">
+                <span class="p-action" {{action "showQuota"}}>
+                    {{#if block._state.viewQuota}}
+                        Hide Quota
+                        {{fa-icon icon="chevron-up"}}
+                    {{else}}
+                        View Quota
+                        {{fa-icon icon="chevron-down"}}
+                    {{/if}}
+                </span>
+                {{#if block._state.searchRunning.quota}}
+                    <div class="mt-1">
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Quota ...
+                    </div>
+                {{/if}}
+                {{#if block._state.viewQuota}}
+                    {{#if details.quota}}
+                        <div class="quota-container mt-1">
+                            {{#if details.quota.user}}
+                                <div class="mt-1">
+                                    <div>
+                                        <span class="p-title mt-0">Your User Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">API Searches: {{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">Quota Duration: {{details.quota.user.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">Next Quota Reset: {{details.quota.user.next_reset}}</span>
+                                    </div>
+                                </div>
+                            {{/if}}
+                            {{#if details.quota.organization}}
+                                <div class="mt-1">
+                                    <div>
+                                        <span class="p-title mt-0">Your Organization Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">API Searches: {{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.user.licenseLimits.enterprise.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">Quota Duration: {{details.quota.organization.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-footnote">Next Quota Reset: {{details.quota.organization.next_reset}}</span>
+                                    </div>
+                                </div>
+                            {{/if}}
+                            <span class="reload-quota-btn" {{action "getQuota"}}>
+                                {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.searchRunning.quota true false)}}
+                            </span>
+                        </div>
+                    {{/if}}
+                {{/if}}
+            </div>
         {{/if}}
     {{/if}}
 

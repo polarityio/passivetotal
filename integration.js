@@ -215,19 +215,12 @@ function doLookup(entities, options, cb) {
       hasValidIndicator = true;
       Logger.info('Looking up indicator ' + entity.value);
       limiter.submit(_limiterLookup, entity, options, (err, result) => {
-        const maxRequestQueueLimitHit =
-          (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
-
-        const statusCode = _.get(err, 'statusCode', 0);
-        const isGatewayTimeout = statusCode === 502 || statusCode === 504;
-        const apiKeyLimitReached = statusCode === 429;
-        const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
-
-        if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout || apiKeyLimitReached) {
+        const searchLimitObject = reachedSearchLimit(err, result);
+        if (searchLimitObject) {
           // Tracking for logging purposes
-          if (isConnectionReset || isGatewayTimeout) numConnectionResets++;
-          if (maxRequestQueueLimitHit) numThrottled++;
-          if (apiKeyLimitReached) numApiKeyLimitedReached++;
+          if (searchLimitObject.isConnectionReset || searchLimitObject.isGatewayTimeout) numConnectionResets++;
+          if (searchLimitObject.maxRequestQueueLimitHit) numThrottled++;
+          if (searchLimitObject.apiKeyLimitReached) numApiKeyLimitedReached++;
 
           lookupResults.push({
             entity,
@@ -235,21 +228,21 @@ function doLookup(entities, options, cb) {
             data: {
               summary: ['Search limit reached'],
               details: {
-                maxRequestQueueLimitHit,
-                isConnectionReset,
-                isGatewayTimeout,
-                apiKeyLimitReached
+                summary: searchLimitObject
               }
             }
           });
         } else if (err) {
+          // a regular error occurred that is not a search limit related error
           errors.push(err);
         } else {
+          // no search limit error and no regular error so create a normal lookup object
           const lookupResultObject = createLookupResultObject(result);
           Logger.trace({ lookupResultObject }, 'lookupResultObject');
           lookupResults.push(lookupResultObject);
         }
 
+        // Check if we got all our results back from the limiter
         if (lookupResults.length + errors.length === entities.length) {
           if (numConnectionResets > 0 || numThrottled > 0) {
             Logger.warn(
@@ -262,7 +255,7 @@ function doLookup(entities, options, cb) {
               'Lookup Limit Reached'
             );
           }
-          // we got all our results
+
           if (errors.length > 0) {
             cb(errors);
           } else {
@@ -298,6 +291,30 @@ function doDetailsLookup(request, entity, options, cb) {
     //Logger.trace({ processedResult }, 'Looking at the Result');
     cb(null, processedResult);
   });
+}
+
+function reachedSearchLimit(err, result) {
+  const maxRequestQueueLimitHit =
+    (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+
+  counter++;
+  Logger.info({ counter }, 'Counter');
+  const statusCode = _.get(err, 'statusCode', 0);
+  //const statusCode = 429;
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || counter % 2 === 0;
+  const apiKeyLimitReached = statusCode === 429;
+  const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
+
+  if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout || apiKeyLimitReached) {
+    return {
+      maxRequestQueueLimitHit,
+      isConnectionReset,
+      isGatewayTimeout,
+      apiKeyLimitReached
+    };
+  }
+
+  return null;
 }
 
 // function onDetails(lookupObject, options, cb) {
@@ -482,6 +499,41 @@ function _isEntityBlocklisted(entity, options) {
   return false;
 }
 
+let counter = 0;
+
+/**
+ * This is a helper function that wraps the onMessage searches with the required logic to detect search limit lookups
+ *
+ * @param err An error (if any) from the onMessage search lookup
+ * @param data The result of the onMessage search lookup
+ * @param getDataHandler a function that gets invoked if there was no error or search limit reached.  The function
+ * should take the resulting data and process it.  This is customized per data type as each data type needs to be
+ * handled in a slightly different manner.
+ * @param cb The onMessage callback to execute with the return data
+ * @returns {*}
+ */
+function onMessageResultHandler(err, data, getDataHandler, options, cb) {
+  const searchLimitObject = reachedSearchLimit(err, data);
+  if (searchLimitObject) {
+    // The user hit a search limit so we're going to return their current API usage
+    getQuota(options, (err, quota) => {
+      if (err) {
+        Logger.error(err, 'Error fetching user quota');
+      }
+      cb(null, {
+        data: searchLimitObject,
+        quota
+      });
+    });
+  } else if (err) {
+    return cb(err);
+  } else {
+    cb(null, {
+      data: getDataHandler()
+    });
+  }
+}
+
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
   switch (payload.searchType) {
@@ -494,19 +546,19 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, whois) => {
-          if (err) {
-            return cb(err);
-          }
-          cb(null, {
-            data: getBody(whois)
-          });
+          onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
         }
       );
       break;
     case 'pdns':
       doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
-        if (err) return cb(err);
-        cb(null, { data: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)) });
+        onMessageResultHandler(
+          err,
+          pdns,
+          () => orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+          options,
+          cb
+        );
       });
       break;
     case 'malware':
@@ -518,8 +570,7 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, malware) => {
-          if (err) return cb(err);
-          cb(null, { data: getRecords(options.records, malware) });
+          onMessageResultHandler(err, malware, () => getRecords(options.records, malware), options, cb);
         }
       );
       break;
@@ -532,8 +583,7 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, certificates) => {
-          if (err) return cb(err);
-          cb(null, { data: getRecords(options.records, certificates) });
+          onMessageResultHandler(err, certificates, () => getRecords(options.records, certificates), options, cb);
         }
       );
       break;
@@ -549,13 +599,17 @@ function onMessage(payload, options, cb) {
             entity,
             options,
             (childErr, childPairs) => {
-              if (childErr) return cb(childErr);
-              cb(null, {
-                data: flow(
-                  concat(getRecords(options.records, parentPairs)),
-                  uniqWith(isEqual)
-                )(getRecords(options.records, childPairs))
-              });
+              onMessageResultHandler(
+                err,
+                childPairs,
+                () =>
+                  flow(
+                    concat(getRecords(options.records, parentPairs)),
+                    uniqWith(isEqual)
+                  )(getRecords(options.records, childPairs)),
+                options,
+                cb
+              );
             }
           );
         }
@@ -563,28 +617,60 @@ function onMessage(payload, options, cb) {
       break;
     case 'reputation':
       doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options, (err, reputation) => {
-        if (err) return cb(err);
-        cb(null, { data: getBody(reputation) });
+        onMessageResultHandler(err, reputation, () => getBody(reputation), options, cb);
       });
       break;
     case 'articles':
       const articles = articlesCache.get('articles');
       if (articles) {
+        Logger.info({ articles: searchArticles(entity, articles) }, 'Search Articles Result');
         cb(null, {
           data: searchArticles(entity, articles)
         });
       } else {
         doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options, (err, articles) => {
-          Logger.info(articles);
-          if (err) return cb(err);
+          onMessageResultHandler(err, articles, () => searchArticles(entity, articles), options, cb);
           if (articles) articlesCache.set('articles', articles);
-          cb(null, {
-            data: searchArticles(entity, articles)
-          });
         });
       }
       break;
+    case 'summary':
+      doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options, (err, summary) => {
+        onMessageResultHandler(
+          err,
+          summary,
+          () => {
+            const lookupResult = createLookupResultObject(summary);
+            return lookupResult.data.details.summary;
+          },
+          options,
+          cb
+        );
+      });
+      break;
+    case 'quota':
+      getQuota(options, (err, quota) => {
+        if (err) return cb(err);
+        cb(null, {
+          quota
+        });
+      });
+      break;
   }
+}
+
+function getQuota(options, cb) {
+  // we can just use a dummy entity object here
+  const entity = null;
+
+  doDetailsLookup({ path: '/v2/account/quota' }, entity, options, (err, quota) => {
+    if (err) {
+      return cb(err);
+    }
+
+    Logger.info({ quota }, 'GOT QUOTA');
+    cb(null, quota.body);
+  });
 }
 
 function validateOptions(userOptions, cb) {
