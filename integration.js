@@ -8,13 +8,6 @@ const {
   getOr,
   slice,
   orderBy,
-  filter,
-  includes,
-  __,
-  flatMap,
-  find,
-  map,
-  toLower,
   concat,
   uniqWith,
   isEqual
@@ -23,12 +16,6 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
-
-const NodeCache = require('node-cache');
-
-const articlesCache = new NodeCache({
-  stdTTL: 5 * 60
-});
 
 let Logger;
 let limiter = null;
@@ -40,12 +27,7 @@ let ipBlocklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
-const INDICATOR_TYPES = {
-  domain: ['url', 'domain', 'domain_port'],
-  IPv4: ['ip_port', 'ip']
-};
 
 /**
  *
