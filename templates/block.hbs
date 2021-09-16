@@ -865,7 +865,7 @@
             {{else}}
                 {{#if details.articles.length}}
                     <h1 class="p-title">
-                        {{fa-icon "newspaper" fixedWidth=true}} Articles Details
+                        {{fa-icon "newspaper" fixedWidth=true}} Article Indicator Details
                     </h1>
                     {{#each details.articles as |article index|}}
                         {{#if (gt index 0)}}
@@ -921,6 +921,7 @@
                             {{/if}}
                         </div>
                     {{/each}}
+                    <span class="p-footnote mt-2">Only articles where the entity <b>{{block.entity.value}}</b> is listed as an indicator are diplayed.</span>
                 {{else}}
                     <div class="alert alert-info mt-2" role="alert">
                         No Articles Found
