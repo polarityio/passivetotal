@@ -111,7 +111,7 @@
                     </a>
                 </li>
             {{/if}}
-            {{#if block.userOptions.enablePairs}}
+            {{#if (and block.userOptions.enablePairs (gt summary.data_summary.host_pairs.count 0))}}
                 <li class="nav-item">
                     <a {{action "changeTab" "pairs"}} class="nav-link {{if (or (eq activeTab "pairs")(not activeTab)) "active"}}" href="#">
                         Host Pairs {{#if block._state.searchRunning.pairs}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
@@ -121,14 +121,16 @@
                     </a>
                 </li>
             {{/if}}
-            <li class="nav-item">
-                <a {{action "changeTab" "pdns"}} class="nav-link {{if (or (eq activeTab "pdns")(not activeTab)) "active"}}" href="#">
-                    Resolutions/PDNS {{#if block._state.searchRunning.pdns}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if pdnsIsLoaded}}
-                        ({{details.pdns.length}})
-                    {{/if}}
-                </a>
-            </li>
+            {{#if (gt summary.data_summary.resolutions.count 0)}}
+                <li class="nav-item">
+                    <a {{action "changeTab" "pdns"}} class="nav-link {{if (or (eq activeTab "pdns")(not activeTab)) "active"}}" href="#">
+                        Resolutions/PDNS {{#if block._state.searchRunning.pdns}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                        {{#if pdnsIsLoaded}}
+                            ({{details.pdns.length}})
+                        {{/if}}
+                    </a>
+                </li>
+            {{/if}}
             <li class="nav-item">
                 <a {{action "changeTab" "whois"}} class="nav-link {{if (or (eq activeTab "whois")(not activeTab)) "active"}}" href="#">
                     WHOIS {{#if block._state.searchRunning.whois}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
@@ -137,22 +139,26 @@
                     {{/if}}
                 </a>
             </li>
-            <li class="nav-item">
-                <a {{action "changeTab" "articles"}} class="nav-link {{if (or (eq activeTab "articles")(not activeTab)) "active"}}" href="#">
-                    Articles {{#if block._state.searchRunning.articles}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if articlesIsLoaded}}
-                        ({{details.articles.length}})
-                    {{/if}}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a {{action "changeTab" "certificates"}} class="nav-link {{if (or (eq activeTab "certificates")(not activeTab)) "active"}}" href="#">
-            SSL Certificates {{#if block._state.searchRunning.certificates}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
-                    {{#if certificatesIsLoaded}}
-                        ({{details.certificates.length}})
-                    {{/if}}
-                </a>
-            </li>
+            {{#if (gt summary.data_summary.articles.count 0)}}
+                <li class="nav-item">
+                    <a {{action "changeTab" "articles"}} class="nav-link {{if (or (eq activeTab "articles")(not activeTab)) "active"}}" href="#">
+                        Articles {{#if block._state.searchRunning.articles}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                        {{#if articlesIsLoaded}}
+                            ({{details.articles.length}})
+                        {{/if}}
+                    </a>
+                </li>
+            {{/if}}
+            {{#if (gt summary.data_summary.certificates.count 0)}}
+                <li class="nav-item">
+                    <a {{action "changeTab" "certificates"}} class="nav-link {{if (or (eq activeTab "certificates")(not activeTab)) "active"}}" href="#">
+                SSL Certificates {{#if block._state.searchRunning.certificates}}{{fa-icon "spinner-third" fixedWidth=true spin=true class="loading-icon"}}{{/if}}
+                        {{#if certificatesIsLoaded}}
+                            ({{details.certificates.length}})
+                        {{/if}}
+                    </a>
+                </li>
+            {{/if}}
             <li class="nav-item">
                 <a {{action "changeTab" "malware"}} class="nav-link {{if (or (eq activeTab "malware")(not activeTab)) "active"}}" href="#">
             Malware {{#if block._state.searchRunning.malware}}{{fa-icon "spinner-third" fixedWisdth=true spin=true class="loading-icon"}}{{/if}}
@@ -1223,6 +1229,9 @@
                 {{else}}
                     <div class="alert alert-info mt-2" role="alert">
                         No SSL Certificates Details Found
+                    </div>
+                    <div>
+                        <span class="p-footnote mt-2">Certificate searches only look for matches against the "subjectCommonName" field of the certificate</span>
                     </div>
                 {{/if}}
             {{/if}}
