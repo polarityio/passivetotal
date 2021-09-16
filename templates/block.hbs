@@ -619,7 +619,7 @@
 
                     {{#if details.whois.admin}}
                         <h1 class="p-title">
-                            Admin
+                            {{fa-icon icon="user-cog" fixedWidth=true}} Admin
                         </h1>
                         <div class="mb-2">
                             {{#if details.whois.admin.name}}
@@ -675,7 +675,7 @@
 
                     {{#if details.whois.registrant}}
                         <h1 class="p-title">
-                            Registrant
+                            {{fa-icon icon="user-tie" fixedWidth=true}} Registrant
                         </h1>
                         <div class="mb-2">
                             {{#if details.whois.registrant.name}}
@@ -731,7 +731,7 @@
 
                     {{#if details.whois.tech}}
                         <h1 class="p-title">
-                            Tech
+                            {{fa-icon icon="user-visor" fixedWidth=true}} Tech
                         </h1>
                         <div class="mb-2">
                             {{#if details.whois.tech.name}}
@@ -1316,7 +1316,7 @@
             {{else}}
                 {{#if details.reputation}}
                 <h1 class="p-title">
-                    {{fa-icon "user-secret" fixedWidth=true}}  Reputation Details
+                    {{fa-icon "star" fixedWidth=true}}  Reputation Details
                 </h1>
                 {{#if (or details.reputation.score (eq details.reputation.score 0))}}
                     <div>
