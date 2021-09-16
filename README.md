@@ -122,7 +122,7 @@ Sometimes the PassiveTotal API will be temporarily unavailable due to PassiveTot
 
 | ![temporary outage on search](images/outage-search.png) | ![temporary outage on OSINT tab](images/outage-tab.png) |
 |---|--|
-|*PassiveTotal search quota exceeded while running a new lookup* | *PassiveTotal temporary outage while reviewing OSINT data via tabs* |
+|*PassiveTotal temporary outage while running a new lookup* | *PassiveTotal temporary outage while reviewing OSINT data via tabs* |
 
 ## Installation Instructions
 
