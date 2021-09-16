@@ -102,7 +102,7 @@ If you reach your PassiveTotal API Search Quota you will see a message informing
 
 | ![search quota](images/quota-search.png) | ![search quota on OSINT tab](images/quota-tab.png) |
 |---|--|
-|*PassiveTotal search quota exceeded while running a new lookup* | *PassiveTotal search quota exceeded while review OSINT data via tabs* |
+|*PassiveTotal search quota exceeded while running a new lookup* | *PassiveTotal search quota exceeded while reviewing OSINT data via tabs* |
 
 ### Timeouts
 
@@ -118,7 +118,7 @@ The PassiveTotal API can sometimes take longer than this to respond to a request
 
 Sometimes the PassiveTotal API will be temporarily unavailable due to PassiveTotal search restrictions.  When this occurs you will be given the ability to retry the search.
 
-| ![temporary outage on search](images/quota-search.png) | ![temporary outage on OSINT tab](images/quota-tab.png) |
+| ![temporary outage on search](images/outage-search.png) | ![temporary outage on OSINT tab](images/outage-tab.png) |
 |---|--|
 |*PassiveTotal search quota exceeded while running a new lookup* | *PassiveTotal temporary outage while reviewing OSINT data via tabs* |
 
