@@ -2,16 +2,7 @@
 
 const request = require('request');
 const _ = require('lodash');
-const {
-  flow,
-  get,
-  getOr,
-  slice,
-  orderBy,
-  concat,
-  uniqWith,
-  isEqual
-} = require('lodash/fp');
+const { flow, get, getOr, slice, orderBy, concat, uniqWith, isEqual } = require('lodash/fp');
 const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
@@ -449,6 +440,7 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, whois) => {
+          Logger.trace({ whois }, 'WHOIS Lookup');
           onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
         }
       );

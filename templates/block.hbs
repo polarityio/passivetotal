@@ -617,7 +617,7 @@
                         {{/if}}
                     </div>
 
-                    {{#if details.whois.admin}}
+                    {{#if details.whois.admin.email}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-cog" fixedWidth=true}} Admin
                         </h1>
@@ -673,7 +673,7 @@
                         </div>
                     {{/if}}
 
-                    {{#if details.whois.registrant}}
+                    {{#if details.whois.registrant.email}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-tie" fixedWidth=true}} Registrant
                         </h1>
@@ -729,7 +729,7 @@
                         </div>
                     {{/if}}
 
-                    {{#if details.whois.tech}}
+                    {{#if details.whois.tech.email}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-visor" fixedWidth=true}} Tech
                         </h1>
