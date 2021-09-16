@@ -264,7 +264,6 @@ function doDetailsLookup(request, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let processedResult = handleRestError(error, entity, response, body);
-    Logger.info({processedResult}, 'Tracker ID Search');
     if (processedResult.error) {
       cb(processedResult.error);
       return;
@@ -275,7 +274,6 @@ function doDetailsLookup(request, entity, options, cb) {
 }
 
 function reachedSearchLimit(err, result) {
-  Logger.info({err, result}, 'Tracker Lookup Search Limit');
   const maxRequestQueueLimitHit =
     (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
