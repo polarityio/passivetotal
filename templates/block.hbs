@@ -1,21 +1,99 @@
 {{#if errorMessage}}
     <div class="alert alert-danger error-container">
-        <div class="error-title">{{fa-icon "exclamation-circle"}} Error Loading Details </div>
+        <div class="error-title">{{fa-icon "exclamation-circle"}} Error Loading Data</div>
         {{errorMessage}}
     </div>
 {{/if}}
 
 {{#if (or details.summary.isConnectionReset details.summary.maxRequestQueueLimitHit details.summary.isGatewayTimeout details.summary.apiKeyLimitReached)}}
-    <button type="button" class="btn btn-polarity btn-sm retry-btn"{{action "retrySearch" "summary"}}>
-        {{#if running}}
-            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-        {{else}}
-            Retry Search
-        {{/if}}
-    </button>
-    <div class="mt-1">
-        <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
-    </div>
+    {{#unless details.summary.apiKeyLimitReached}}
+        <button type="button" class="btn btn-polarity btn-sm retry-btn" {{action "retrySearch" "summary"}}>
+            {{#if block._state.searchRunning.summary}}
+                {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+            {{else}}
+                Retry Search
+            {{/if}}
+        </button>
+        <div class="mt-1">
+            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+        </div>
+    {{/unless}}
+
+    {{#if details.summary.apiKeyLimitReached}}
+        <div class="mt-1">
+            <span>You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+            <div class="mt-1">
+                <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+            </div>
+            <div>
+                <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+            </div>
+            {{!-- Get Quota Information --}}
+            <div class="mt-1">
+                    <span class="p-action" {{action "showQuota"}}>
+                        {{#if block._state.viewQuota}}
+                            Hide Search Quota
+                            {{fa-icon icon="chevron-up"}}
+                        {{else}}
+                            View Search Quota
+                            {{fa-icon icon="chevron-down"}}
+                        {{/if}}
+                    </span>
+                {{#if block._state.searchRunning.quota}}
+                    <div class="mt-1">
+                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Quota ...
+                    </div>
+                {{/if}}
+                {{#if block._state.viewQuota}}
+                    {{#if details.quota}}
+                        <div class="quota-container mt-1">
+                            {{#if details.quota.user}}
+                                <div>
+                                    <div>
+                                        <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">API Searches:</span>
+                                        <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Quota Duration: </span>
+                                        <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                    </div>
+                                </div>
+                            {{/if}}
+                            {{#if details.quota.organization}}
+                                <div class="mt-1">
+                                    <div>
+                                        <span class="p-title">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">API Searches: </span>
+                                        <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Quota Duration:</span>
+                                        <span>{{details.quota.organization.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                    </div>
+                                </div>
+                            {{/if}}
+                            <span class="reload-quota-btn" {{action "getQuota"}}>
+                                {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.searchRunning.quota true false)}}
+                            </span>
+                        </div>
+                    {{/if}}
+                {{/if}}
+            </div>
+        </div>
+    {{/if}}
 {{else if details}}
     {{#if (not-eq block.entity.type "custom")}}
     {{! IPv4 and Domain output parsing}}
@@ -90,16 +168,76 @@
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Host Pairs
                 </div>
-            {{else if (or details.pairs.isConnectionReset details.pairs.maxRequestQueueLimitHit details.pairs.isGatewayTimeout details.pairs.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pairs"}}>
-                    {{#if block._state.searchRunning.pairs}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry Pairs Search
-                    {{/if}}
-                </button>
+            {{else if (or details.pairs.isConnectionReset details.pairs.maxRequestQueueLimitHit details.pairs.isGatewayTimeout details.pairs.apiKeyLimitReached details.pairs.onMessageTimeout)}}
+                {{#unless details.pairs.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pairs"}}>
+                        {{#if block._state.searchRunning.pairs}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry Pairs Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
-                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{#if details.pairs.onMessageTimeout}}
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Pairs Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
+                    {{else if details.pairs.apiKeyLimitReached}}
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{else}}
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.pairs.length}}
@@ -150,21 +288,82 @@
             {{/if}}
             {{/if}}
         {{/if}}
+
         {{#if (eq activeTab "pdns")}}
             {{#if (and block._state.searchRunning.pdns (not block._state.initialLoadAttempted.pdns))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Resolution/PDNS
                 </div>
-            {{else if (or details.pdns.isConnectionReset details.pdns.maxRequestQueueLimitHit details.pdns.isGatewayTimeout details.pdns.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pdns"}}>
-                    {{#if block._state.searchRunning.pdns}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry PDNS Search
-                    {{/if}}
-                </button>
+            {{else if (or details.pdns.isConnectionReset details.pdns.maxRequestQueueLimitHit details.pdns.isGatewayTimeout details.pdns.apiKeyLimitReached details.pdns.onMessageTimeout)}}
+                {{#unless details.pdns.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "pdns"}}>
+                        {{#if block._state.searchRunning.pdns}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry PDNS Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
-                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{#if details.pdns.onMessageTimeout}}
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry PDNS Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
+                    {{else if details.pdns.apiKeyLimitReached}}
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{else}}
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.pdns.length}}
@@ -245,42 +444,81 @@
                 {{/if}}
             {{/if}}
         {{/if}}
+
         {{#if (eq activeTab "whois")}}
             {{#if (and block._state.searchRunning.whois (not block._state.initialLoadAttempted.whois))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading WHOIS
                 </div>
-            {{else if (or details.whois.isConnectionReset details.whois.maxRequestQueueLimitHit details.whois.isGatewayTimeout details.whois.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "whois"}}>
-                    {{#if block._state.searchRunning.whois}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry WHOIS Search
-                    {{/if}}
-                </button>
+            {{else if (or details.whois.isConnectionReset details.whois.maxRequestQueueLimitHit details.whois.isGatewayTimeout details.whois.apiKeyLimitReached details.whois.onMessageTimeout)}}
+                {{#unless details.whois.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "whois"}}>
+                        {{#if block._state.searchRunning.whois}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry WHOIS Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
                     {{#if details.whois.onMessageTimeout}}
-                        <span class="p-footnote">The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Search" button.</span>
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry WHOIS Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
                     {{else if details.whois.apiKeyLimitReached}}
-                        <span class="p-footnote">You have reached your PassiveTotal API Search Quota. You can retry your search after your quota has reset by pressing the "Retry Search" button.</span>
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
                         {{#if details.quota.user}}
                             <div class="mt-1">
                                 <div>
-                                    <span class="p-title">Quota</span>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
                                 </div>
                                 <div>
-                                    <span class="p-footnote">API Searches: {{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
                                 </div>
                                 <div>
-                                    <span class="p-footnote">Quota Duration: {{details.quota.user.quotaInterval}}</span>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
                                 </div>
                                 <div>
-                                    <span class="p-footnote">Next Quota Reset: {{details.quota.user.next_reset}}</span>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
                                 </div>
                             </div>
                         {{/if}}
                     {{else}}
-                        <span class="p-footnote">A PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
                     {{/if}}
                 </div>
             {{else}}
@@ -547,24 +785,81 @@
                 {{/if}}
             {{/if}}
         {{/if}}
+
         {{#if (eq activeTab "articles")}}
             {{#if (and block._state.searchRunning.articles (not block._state.initialLoadAttempted.articles))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Articles
                 </div>
             {{else if (or details.articles.isConnectionReset details.articles.maxRequestQueueLimitHit details.articles.isGatewayTimeout details.articles.apiKeyLimitReached details.articles.onMessageTimeout)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "articles"}}>
-                    {{#if block._state.searchRunning.articles}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry Articles Search
-                    {{/if}}
-                </button>
+                {{#unless details.articles.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "articles"}}>
+                        {{#if block._state.searchRunning.articles}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry Articles Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
                     {{#if details.articles.onMessageTimeout}}
-                        <span class="p-footnote">The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Search" button.</span>
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Articles Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
+                    {{else if details.articles.apiKeyLimitReached}}
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
                     {{else}}
-                        <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
                     {{/if}}
                 </div>
             {{else}}
@@ -628,26 +923,87 @@
                     {{/each}}
                 {{else}}
                     <div class="alert alert-info mt-2" role="alert">
-                        No Articles Details Found
+                        No Articles Found
                     </div>
                 {{/if}}
             {{/if}}
         {{/if}}
+
         {{#if (eq activeTab "certificates")}}
             {{#if (and block._state.searchRunning.certificates (not block._state.initialLoadAttempted.certificates))}}
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading SSL Certificates
                 </div>
-            {{else if (or details.certificates.isConnectionReset details.certificates.maxRequestQueueLimitHit details.certificates.isGatewayTimeout details.certificates.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "certificates"}}>
-                    {{#if block._state.searchRunning.certificates}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry Certificates Search
-                    {{/if}}
-                </button>
+            {{else if (or details.certificates.isConnectionReset details.certificates.maxRequestQueueLimitHit details.certificates.isGatewayTimeout details.certificates.apiKeyLimitReached details.certificates.onMessageTimeout)}}
+                {{#unless details.certificates.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "certificates"}}>
+                        {{#if block._state.searchRunning.certificates}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry Certificates Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
-                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{#if details.certificates.onMessageTimeout}}
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Certificates Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
+                    {{else if details.certificates.apiKeyLimitReached}}
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{else}}
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.certificates.length}}
@@ -873,23 +1229,83 @@
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Reputation
                 </div>
-            {{else if (or details.reputation.isConnectionReset details.reputation.maxRequestQueueLimitHit details.reputation.isGatewayTimeout details.reputation.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "reputation"}}>
-                    {{#if block._state.searchRunning.reputation}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry Reputation Search
-                    {{/if}}
-                </button>
+            {{else if (or details.reputation.isConnectionReset details.reputation.maxRequestQueueLimitHit details.reputation.isGatewayTimeout details.reputation.apiKeyLimitReached details.reputation.onMessageTimeout)}}
+                {{#unless details.reputation.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "reputation"}}>
+                        {{#if block._state.searchRunning.reputation}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry Reputation Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
-                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{#if details.reputation.onMessageTimeout}}
+                            <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Reputation Search" button.</span>
+                            <div class="mt-1">
+                                <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                            </div>
+                            <div>
+                                <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                            </div>
+                    {{else if details.reputation.apiKeyLimitReached}}
+                            <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                            <div class="mt-1">
+                                <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                            </div>
+                            <div>
+                                <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                            </div>
+                        {{#if details.quota.user}}
+                                <div class="mt-1">
+                                    <div>
+                                        <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">API Searches:</span>
+                                        <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Quota Duration: </span>
+                                        <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                    </div>
+                                </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                                <div class="mt-1">
+                                    <div>
+                                        <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">API Searches: </span>
+                                        <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Quota Duration:</span>
+                                        <span>{{details.quota.organization.quotaInterval}}</span>
+                                    </div>
+                                    <div>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                    </div>
+                                </div>
+                        {{/if}}
+                    {{else}}
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.reputation}}
                 <h1 class="p-title">
                     {{fa-icon "user-secret" fixedWidth=true}}  Reputation Details
                 </h1>
-                {{#if details.reputation.score}}
+                {{#if (or details.reputation.score (eq details.reputation.score 0))}}
                     <div>
                         <span class="p-key">Score: </span>
                         <span class="p-value">{{details.reputation.score}}</span>
@@ -947,16 +1363,76 @@
                 <div class="alert alert-info mt-2" role="alert">
                     {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Malware
                 </div>
-            {{else if (or details.malware.isConnectionReset details.malware.maxRequestQueueLimitHit details.malware.isGatewayTimeout details.malware.apiKeyLimitReached)}}
-                <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "malware"}}>
-                    {{#if block._state.searchRunning.malware}}
-                        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-                    {{else}}
-                        Retry Malware Search
-                    {{/if}}
-                </button>
+            {{else if (or details.malware.isConnectionReset details.malware.maxRequestQueueLimitHit details.malware.isGatewayTimeout details.malware.apiKeyLimitReached details.malware.onMessageTimeout)}}
+                {{#unless details.malware.apiKeyLimitReached}}
+                    <button type="button" class="btn btn-polarity btn-sm retry-btn mt-1" {{action "retrySearch" "malware"}}>
+                        {{#if block._state.searchRunning.malware}}
+                            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+                        {{else}}
+                            Retry Malware Search
+                        {{/if}}
+                    </button>
+                {{/unless}}
                 <div class="mt-1">
-                    <span class="p-footnote">The PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                    {{#if details.malware.onMessageTimeout}}
+                        <span>The PassiveTotal API took too long to respond.  You can retry your search by pressing the "Retry Malware Search" button.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Some searches via the PassiveTotal API take too long to respond.  Click the link to run the search via the PassiveTotal website instead.</span>
+                        </div>
+                    {{else if details.malware.apiKeyLimitReached}}
+                        <span>{{fa-icon icon="exclamation-circle" fixedWidth=true class="details-icon"}} You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you will be able to run searches again.</span>
+                        <div class="mt-1">
+                            <a class="p-link" href="https://community.riskiq.com/research?query={{block.entity.value}}">Run Search via PassiveTotal Web Interface {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                        </div>
+                        <div>
+                            <span class="p-footnote">Use the link to run this search via the PassiveTotal website which uses a different quota.</span>
+                        </div>
+                        {{#if details.quota.user}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{else}}
+                        <div class="mt-1">
+                            <span>A temporary PassiveTotal API search limit was reached.  You can retry your search by pressing the "Retry Search" button.</span>
+                        </div>
+                    {{/if}}
                 </div>
             {{else}}
                 {{#if details.malware}}
@@ -1108,13 +1584,14 @@
                 </div>
                 {{/if}}
             {{/if}}
+            {{!-- view quota --}}
             <div class="mt-1">
                 <span class="p-action" {{action "showQuota"}}>
                     {{#if block._state.viewQuota}}
-                        Hide Quota
+                        Hide Search Quota
                         {{fa-icon icon="chevron-up"}}
                     {{else}}
-                        View Quota
+                        View Search Quota
                         {{fa-icon icon="chevron-down"}}
                     {{/if}}
                 </span>
@@ -1127,34 +1604,40 @@
                     {{#if details.quota}}
                         <div class="quota-container mt-1">
                             {{#if details.quota.user}}
-                                <div class="mt-1">
+                                <div>
                                     <div>
-                                        <span class="p-title mt-0">Your User Search Quota</span>
+                                        <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">API Searches: {{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                        <span class="p-key">API Searches:</span>
+                                        <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">Quota Duration: {{details.quota.user.quotaInterval}}</span>
+                                        <span class="p-key">Quota Duration: </span>
+                                        <span class="p-value">{{details.quota.user.quotaInterval}}</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">Next Quota Reset: {{details.quota.user.next_reset}}</span>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.user.next_reset}}</span>
                                     </div>
                                 </div>
                             {{/if}}
                             {{#if details.quota.organization}}
                                 <div class="mt-1">
                                     <div>
-                                        <span class="p-title mt-0">Your Organization Search Quota</span>
+                                        <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">API Searches: {{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.user.licenseLimits.enterprise.searchApi}} used</span>
+                                        <span class="p-key">API Searches: </span>
+                                        <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">Quota Duration: {{details.quota.organization.quotaInterval}}</span>
+                                        <span class="p-key">Quota Duration:</span>
+                                        <span>{{details.quota.organization.quotaInterval}}</span>
                                     </div>
                                     <div>
-                                        <span class="p-footnote">Next Quota Reset: {{details.quota.organization.next_reset}}</span>
+                                        <span class="p-key">Next Quota Reset: </span>
+                                        <span class="p-value">{{details.quota.organization.next_reset}}</span>
                                     </div>
                                 </div>
                             {{/if}}

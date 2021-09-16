@@ -297,11 +297,9 @@ function reachedSearchLimit(err, result) {
   const maxRequestQueueLimitHit =
     (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
-  counter++;
-  Logger.info({ counter }, 'Counter');
-  const statusCode = _.get(err, 'statusCode', 0);
-  //const statusCode = 429;
-  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || counter % 2 === 0;
+  let statusCode = _.get(err, 'statusCode', 0);
+  //statusCode = 429;
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504;
   const apiKeyLimitReached = statusCode === 429;
   const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
 
@@ -386,19 +384,16 @@ function reachedSearchLimit(err, result) {
 
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
-const searchArticles = (entity, articles) =>
-  flow(
-    get('body.articles'),
-    filter(
-      flow(
-        get('indicators'),
-        filter(flow(get('type'), includes(__, get(entity.type, INDICATOR_TYPES)))),
-        flatMap(get('values')),
-        map(toLower),
-        find(includes(flow(get('value'), toLower)(entity)))
-      )
-    )
-  )(articles);
+const getArticles = (recordsCount, result) => {
+
+  const articles = _.get(result, 'body.articles', []);
+  Logger.info({result, articles}, 'getArticles');
+  if (Array.isArray(articles)) {
+    return articles.slice(0, recordsCount);
+  } else {
+    return [];
+  }
+};
 
 function handleRestError(error, entity, res, body) {
   let result;
@@ -499,8 +494,6 @@ function _isEntityBlocklisted(entity, options) {
   return false;
 }
 
-let counter = 0;
-
 /**
  * This is a helper function that wraps the onMessage searches with the required logic to detect search limit lookups
  *
@@ -600,7 +593,7 @@ function onMessage(payload, options, cb) {
             options,
             (childErr, childPairs) => {
               onMessageResultHandler(
-                err,
+                childErr,
                 childPairs,
                 () =>
                   flow(
@@ -617,22 +610,28 @@ function onMessage(payload, options, cb) {
       break;
     case 'reputation':
       doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options, (err, reputation) => {
+        Logger.info({ reputation }, 'Reputation Result');
         onMessageResultHandler(err, reputation, () => getBody(reputation), options, cb);
       });
       break;
     case 'articles':
-      const articles = articlesCache.get('articles');
-      if (articles) {
-        Logger.info({ articles: searchArticles(entity, articles) }, 'Search Articles Result');
-        cb(null, {
-          data: searchArticles(entity, articles)
-        });
-      } else {
-        doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options, (err, articles) => {
-          onMessageResultHandler(err, articles, () => searchArticles(entity, articles), options, cb);
-          if (articles) articlesCache.set('articles', articles);
-        });
-      }
+      doDetailsLookup(
+        {
+          path: '/v2/articles/indicator',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, articles) => {
+          Logger.info({articles}, 'Articles');
+          onMessageResultHandler(err, articles, () => getArticles(options.records, articles), options, cb);
+        }
+      );
+      break;
+    case 'articlesById':
+      doDetailsLookup({ path: `/v2/articles/${payload.id}` }, entity, options, (err, article) => {
+        onMessageResultHandler(err, article, () => article, options, cb);
+      });
       break;
     case 'summary':
       doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options, (err, summary) => {

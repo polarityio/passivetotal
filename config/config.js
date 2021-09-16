@@ -50,10 +50,18 @@ module.exports = {
    */
   block: {
     component: {
-      file: './component/pt-block.js'
+      file: './component/block.js'
     },
     template: {
-      file: './templates/pt-block.hbs'
+      file: './templates/block.hbs'
+    }
+  },
+  summary: {
+    component: {
+      file: './component/summary.js'
+    },
+    template: {
+      file: './templates/summary.hbs'
     }
   },
   request: {
