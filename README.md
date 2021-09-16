@@ -2,7 +2,7 @@
 
 ![mode:on demand only](https://img.shields.io/badge/mode-on%20demand%20only-blue.svg)
 
-> As lookups return data on nearly every IPv4 address and domain, we recommend running this integration in "On-Demand" mode only.
+> As lookups return data on nearly every IPv4 address and domain, this integration is set to run in "On-Demand" mode only.
 
 The Polarity RiskIQ Community (PassiveTotal) integration retrieves the "Data Summary Card" for both IPv4 addresses and domains. The integration can also perform additional lookups against malware and open source intelligence endpoints via the details view.  
 
