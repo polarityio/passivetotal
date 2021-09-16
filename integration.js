@@ -213,7 +213,6 @@ function doLookup(entities, options, cb) {
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
-      Logger.info('Looking up indicator ' + entity.value);
       limiter.submit(_limiterLookup, entity, options, (err, result) => {
         const searchLimitObject = reachedSearchLimit(err, result);
         if (searchLimitObject) {
@@ -298,8 +297,7 @@ function reachedSearchLimit(err, result) {
     (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
   let statusCode = _.get(err, 'statusCode', 0);
-  //statusCode = 429;
-  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || true;
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504;
   const apiKeyLimitReached = statusCode === 429;
   const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
 
@@ -319,7 +317,6 @@ const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
   const articles = _.get(result, 'body.articles', []);
-  Logger.info({ result, articles }, 'getArticles');
   if (Array.isArray(articles)) {
     return articles.slice(0, recordsCount);
   } else {
@@ -562,7 +559,7 @@ function onMessage(payload, options, cb) {
       break;
     case 'reputation':
       doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options, (err, reputation) => {
-        Logger.info({ reputation }, 'Reputation Result');
+        Logger.trace({ reputation }, 'Reputation Result');
         onMessageResultHandler(err, reputation, () => getBody(reputation), options, cb);
       });
       break;
@@ -575,7 +572,7 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, articles) => {
-          Logger.info({ articles }, 'Articles');
+          Logger.trace({ articles }, 'Articles');
           onMessageResultHandler(err, articles, () => getArticles(options.records, articles), options, cb);
         }
       );
@@ -619,7 +616,6 @@ function getQuota(options, cb) {
       return cb(err);
     }
 
-    Logger.info({ quota }, 'GOT QUOTA');
     cb(null, quota.body);
   });
 }
