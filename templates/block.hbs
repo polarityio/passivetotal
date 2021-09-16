@@ -921,10 +921,13 @@
                             {{/if}}
                         </div>
                     {{/each}}
-                    <span class="p-footnote mt-2">Only articles where the entity <b>{{block.entity.value}}</b> is listed as an indicator are displayed.</span>
+                    <span class="p-footnote mt-2">This tab only displays articles where the entity <b>{{block.entity.value}}</b> is listed as an indicator.</span>
                 {{else}}
                     <div class="alert alert-info mt-2" role="alert">
                         No Articles Found
+                    </div>
+                    <div>
+                        <span class="p-footnote mt-2">This tab only displays articles where the entity <b>{{block.entity.value}}</b> is listed as an indicator.</span>
                     </div>
                 {{/if}}
             {{/if}}
