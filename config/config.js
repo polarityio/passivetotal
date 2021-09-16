@@ -31,6 +31,7 @@ module.exports = {
       regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
     }
   ],
+  onDemandOnly: true,
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
