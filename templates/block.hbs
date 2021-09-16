@@ -670,6 +670,12 @@
                                     <span class="p-value">{{details.whois.admin.state}}</span>
                                 </div>
                             {{/if}}
+                            {{#if details.whois.admin.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.admin.country}}</span>
+                                </div>
+                            {{/if}}
                         </div>
                     {{/if}}
 
@@ -726,6 +732,12 @@
                                     <span class="p-value">{{details.whois.registrant.state}}</span>
                                 </div>
                             {{/if}}
+                            {{#if details.whois.registrant.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.registrant.country}}</span>
+                                </div>
+                            {{/if}}
                         </div>
                     {{/if}}
 
@@ -780,6 +792,12 @@
                                 <div>
                                     <span class="p-key">State: </span>
                                     <span class="p-value">{{details.whois.tech.state}}</span>
+                                </div>
+                            {{/if}}
+                            {{#if details.whois.tech.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.tech.country}}</span>
                                 </div>
                             {{/if}}
                         </div>
