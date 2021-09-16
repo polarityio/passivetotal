@@ -299,7 +299,7 @@ function reachedSearchLimit(err, result) {
 
   let statusCode = _.get(err, 'statusCode', 0);
   //statusCode = 429;
-  const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || true;
   const apiKeyLimitReached = statusCode === 429;
   const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
 
@@ -315,79 +315,11 @@ function reachedSearchLimit(err, result) {
   return null;
 }
 
-// function onDetails(lookupObject, options, cb) {
-//   let entity = lookupObject.entity;
-//   if (entity.type === 'domain' || entity.type === 'IPv4') {
-//     const articles = articlesCache.get('articles');
-//     async.parallel(
-//       {
-//         whois: doDetailsLookup({ path: '/v2/whois', qs: { query: entity.value } }, entity, options), // fast 112 ms
-//         pdns: doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options), // fast 3.3 seconds
-//         malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options), // fast 282 ms
-//         certificates: doDetailsLookup(
-//           {
-//             path: '/v2/ssl-certificate/search', // 4.41 seconds
-//             qs: { query: entity.value, field: 'subjectCommonName' }
-//           },
-//           entity,
-//           options
-//         ),
-//         ...(!articles
-//           ? {
-//               articles: doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options) // fast 156ms
-//             }
-//           : { articles: (done) => done(null, articles) }),
-//         ...(options.enableRep && {
-//           reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
-//         }),
-//         ...(options.enablePairs && {
-//           parentPairs: doDetailsLookup(
-//             { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
-//             entity,
-//             options
-//           ),
-//           childPairs: doDetailsLookup(
-//             { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
-//             entity,
-//             options
-//           )
-//         })
-//       },
-//       (err, { whois, pdns, certificates, malware, reputation, parentPairs, childPairs, articles }) => {
-//         if (err) return cb(err);
-//
-//         if (articles) articlesCache.set('articles', articles);
-//
-//         lookupObject.data.details = {
-//           summary: lookupObject.data.details,
-//           whois: getBody(whois),
-//           pdns: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
-//           certificates: getRecords(options.records, certificates),
-//           malware: getRecords(options.records, malware),
-//           reputation: getBody(reputation),
-//           pairs: flow(
-//             concat(getRecords(options.records, parentPairs)),
-//             uniqWith(isEqual)
-//           )(getRecords(options.records, childPairs)),
-//           articles: searchArticles(entity, articles)
-//         };
-//
-//         Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
-//
-//         cb(null, lookupObject.data);
-//       }
-//     );
-//   } else {
-//     cb(null, lookupObject.data);
-//   }
-// }
-
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
-
   const articles = _.get(result, 'body.articles', []);
-  Logger.info({result, articles}, 'getArticles');
+  Logger.info({ result, articles }, 'getArticles');
   if (Array.isArray(articles)) {
     return articles.slice(0, recordsCount);
   } else {
@@ -581,30 +513,50 @@ function onMessage(payload, options, cb) {
       );
       break;
     case 'pairs':
-      doDetailsLookup(
-        { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
-        entity,
-        options,
-        (parentErr, parentPairs) => {
-          if (parentErr) return cb(parentErr);
-          doDetailsLookup(
-            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
-            entity,
-            options,
-            (childErr, childPairs) => {
-              onMessageResultHandler(
-                childErr,
-                childPairs,
-                () =>
-                  flow(
-                    concat(getRecords(options.records, parentPairs)),
-                    uniqWith(isEqual)
-                  )(getRecords(options.records, childPairs)),
-                options,
-                cb
-              );
-            }
-          );
+      async.parallel(
+        {
+          parentPairs: (done) => {
+            doDetailsLookup(
+              { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
+              entity,
+              options,
+              done
+            );
+          },
+          childPairs: (done) => {
+            doDetailsLookup(
+              { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
+              entity,
+              options,
+              done
+            );
+          }
+        },
+        (err, results) => {
+          const searchLimitObjectParent = reachedSearchLimit(err, results.parentPairs);
+          const searchLimitObjectChild = reachedSearchLimit(err, results.childPairs);
+
+          if (searchLimitObjectParent || searchLimitObjectChild) {
+            // The user hit a search limit so we're going to return their current API usage
+            getQuota(options, (err, quota) => {
+              if (err) {
+                Logger.error(err, 'Error fetching user quota');
+              }
+              cb(null, {
+                data: searchLimitObjectParent || searchLimitObjectChild,
+                quota
+              });
+            });
+          } else if (err) {
+            return cb(err);
+          } else {
+            cb(null, {
+              data: flow(
+                concat(getRecords(options.records, results.parentPairs)),
+                uniqWith(isEqual)
+              )(getRecords(options.records, results.childPairs))
+            });
+          }
         }
       );
       break;
@@ -623,7 +575,7 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, articles) => {
-          Logger.info({articles}, 'Articles');
+          Logger.info({ articles }, 'Articles');
           onMessageResultHandler(err, articles, () => getArticles(options.records, articles), options, cb);
         }
       );
