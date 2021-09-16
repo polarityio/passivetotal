@@ -12,7 +12,9 @@ To learn more about RiskIQ Community (PassiveTotal), please visit the [official 
 
 Check out the integration in action:
 
-![passivetotal](images/overlay.png)
+| ![search quota](images/overlay-domain.png) | ![search quota on OSINT tab](images/overlay-tracker.png) |
+|---|--|
+|*PassiveTotal Domain Lookup* | *PassiveTotal Google Tracker lookup* |
 
 ## RiskIQ Community (PassiveTotal) Requests
 
