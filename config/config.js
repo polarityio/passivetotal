@@ -192,8 +192,8 @@ module.exports = {
       key: 'minTime',
       name: 'Minimum Time Between Searches',
       description:
-        'Minimum amount of time in milliseconds between each entity search (defaults to 25).  Integration must be restarted after changing this option.',
-      default: 25,
+        'Minimum amount of time in milliseconds between each entity search (defaults to 50).  Integration must be restarted after changing this option.',
+      default: 50,
       type: 'number',
       userCanEdit: false,
       adminOnly: true
