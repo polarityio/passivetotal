@@ -617,7 +617,7 @@
                         {{/if}}
                     </div>
 
-                    {{#if details.whois.admin.email}}
+                    {{#if hasWhoisAdmin}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-cog" fixedWidth=true}} Admin
                         </h1>
@@ -670,10 +670,16 @@
                                     <span class="p-value">{{details.whois.admin.state}}</span>
                                 </div>
                             {{/if}}
+                            {{#if details.whois.admin.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.admin.country}}</span>
+                                </div>
+                            {{/if}}
                         </div>
                     {{/if}}
 
-                    {{#if details.whois.registrant.email}}
+                    {{#if hasWhoisRegistrant}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-tie" fixedWidth=true}} Registrant
                         </h1>
@@ -726,10 +732,16 @@
                                     <span class="p-value">{{details.whois.registrant.state}}</span>
                                 </div>
                             {{/if}}
+                            {{#if details.whois.registrant.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.registrant.country}}</span>
+                                </div>
+                            {{/if}}
                         </div>
                     {{/if}}
 
-                    {{#if details.whois.tech.email}}
+                    {{#if hasWhoisTech}}
                         <h1 class="p-title">
                             {{fa-icon icon="user-visor" fixedWidth=true}} Tech
                         </h1>
@@ -780,6 +792,12 @@
                                 <div>
                                     <span class="p-key">State: </span>
                                     <span class="p-value">{{details.whois.tech.state}}</span>
+                                </div>
+                            {{/if}}
+                            {{#if details.whois.tech.country}}
+                                <div>
+                                    <span class="p-key">Country: </span>
+                                    <span class="p-value">{{details.whois.tech.country}}</span>
                                 </div>
                             {{/if}}
                         </div>
