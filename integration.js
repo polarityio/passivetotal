@@ -110,7 +110,7 @@ function _limiterLookup(entity, options, cb) {
   }
 }
 
-function createLookupResultObject(result) {
+function createLookupResultObject(result, options) {
   if (
     !result.body ||
     (get('entity.type', result) !== 'custom' &&
@@ -218,7 +218,7 @@ function doLookup(entities, options, cb) {
           errors.push(err);
         } else {
           // no search limit error and no regular error so create a normal lookup object
-          const lookupResultObject = createLookupResultObject(result);
+          const lookupResultObject = createLookupResultObject(result, options);
           Logger.trace({ lookupResultObject }, 'lookupResultObject');
           lookupResults.push(lookupResultObject);
         }
@@ -264,7 +264,7 @@ function doDetailsLookup(request, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let processedResult = handleRestError(error, entity, response, body);
-
+    Logger.info({processedResult}, 'Tracker ID Search');
     if (processedResult.error) {
       cb(processedResult.error);
       return;
@@ -275,6 +275,7 @@ function doDetailsLookup(request, entity, options, cb) {
 }
 
 function reachedSearchLimit(err, result) {
+  Logger.info({err, result}, 'Tracker Lookup Search Limit');
   const maxRequestQueueLimitHit =
     (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
@@ -570,7 +571,7 @@ function onMessage(payload, options, cb) {
           err,
           summary,
           () => {
-            const lookupResult = createLookupResultObject(summary);
+            const lookupResult = createLookupResultObject(summary, options);
             return lookupResult.data.details.summary;
           },
           options,

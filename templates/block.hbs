@@ -1688,5 +1688,69 @@
                 </div>
             </div>
         {{/each}}
+        {{!-- view quota --}}
+        <div class="mt-1">
+                <span class="p-action" {{action "showQuota"}}>
+                    {{#if block._state.viewQuota}}
+                        Hide Search Quota
+                        {{fa-icon icon="chevron-up"}}
+                    {{else}}
+                        View Search Quota
+                        {{fa-icon icon="chevron-down"}}
+                    {{/if}}
+                </span>
+            {{#if block._state.searchRunning.quota}}
+                <div class="mt-1">
+                    {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Quota ...
+                </div>
+            {{/if}}
+            {{#if block._state.viewQuota}}
+                {{#if details.quota}}
+                    <div class="quota-container mt-1">
+                        {{#if details.quota.user}}
+                            <div>
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your User Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches:</span>
+                                    <span class="p-value">{{details.quota.user.licenseCounts.searchApi}} of {{details.quota.user.licenseLimits.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration: </span>
+                                    <span class="p-value">{{details.quota.user.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.user.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        {{#if details.quota.organization}}
+                            <div class="mt-1">
+                                <div>
+                                    <span class="p-title mt-0">{{fa-icon icon="building" fixedWidth=true}} Your Organization Search Quota</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">API Searches: </span>
+                                    <span class="p-value">{{details.quota.organization.licenseCounts.enterprise.searchApi}} of {{details.quota.organization.licenseLimits.enterprise.searchApi}} used</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Quota Duration:</span>
+                                    <span>{{details.quota.organization.quotaInterval}}</span>
+                                </div>
+                                <div>
+                                    <span class="p-key">Next Quota Reset: </span>
+                                    <span class="p-value">{{details.quota.organization.next_reset}}</span>
+                                </div>
+                            </div>
+                        {{/if}}
+                        <span class="reload-quota-btn" {{action "getQuota"}}>
+                            {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.searchRunning.quota true false)}}
+                        </span>
+                    </div>
+                {{/if}}
+            {{/if}}
+        </div>
     {{/if}}
 {{/if}}
