@@ -2,34 +2,14 @@
 
 const request = require('request');
 const _ = require('lodash');
-const {
-  flow,
-  get,
-  getOr,
-  slice,
-  orderBy,
-  filter,
-  includes,
-  __,
-  flatMap,
-  find,
-  map,
-  toLower,
-  concat,
-  uniqWith,
-  isEqual
-} = require('lodash/fp');
+const { flow, get, getOr, slice, orderBy, concat, uniqWith, isEqual } = require('lodash/fp');
+const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
 
-const NodeCache = require('node-cache');
-
-const articlesCache = new NodeCache({
-  stdTTL: 5 * 60
-});
-
 let Logger;
+let limiter = null;
 let requestWithDefaults;
 let previousDomainRegexAsString = '';
 let previousIpRegexAsString = '';
@@ -38,12 +18,8 @@ let ipBlocklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
-const INDICATOR_TYPES = {
-  domain: ['url', 'domain', 'domain_port'],
-  IPv4: ['ip_port', 'ip']
-};
+
 /**
  *
  * @param entities
@@ -77,6 +53,15 @@ function startup(logger) {
   requestWithDefaults = request.defaults(defaults);
 }
 
+function _setupLimiter(options) {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10),
+    highWater: 100, // no more than 100 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10)
+  });
+}
+
 function _setupRegexBlocklists(options) {
   if (options.domainBlocklistRegex !== previousDomainRegexAsString && options.domainBlocklistRegex.length === 0) {
     Logger.debug('Removing Domain Blocklist Regex Filtering');
@@ -103,219 +88,219 @@ function _setupRegexBlocklists(options) {
   }
 }
 
+function _limiterLookup(entity, options, cb) {
+  if (entity.type === 'custom') {
+    doDetailsLookup(
+      { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
+      entity,
+      options,
+      cb
+    );
+  } else {
+    doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options, cb);
+  }
+}
+
+function createLookupResultObject(result, options) {
+  if (
+    !result.body ||
+    (get('entity.type', result) !== 'custom' &&
+      get('body.data_summary.resolutions.count', result) === 0 &&
+      get('body.data_summary.certificates.count', result) === 0 &&
+      get('body.data_summary.hashes.count', result) === 0 &&
+      get('body.data_summary.projects.count', result) === 0 &&
+      get('body.data_summary.articles.count', result) === 0 &&
+      get('body.data_summary.trackers.count', result) === 0 &&
+      get('body.data_summary.components.count', result) === 0 &&
+      get('body.data_summary.host_pairs.count', result) === 0 &&
+      get('body.data_summary.cookies.count', result) === 0)
+  ) {
+    return {
+      entity: result.entity,
+      data: null
+    };
+  } else if (result.entity.type != 'custom') {
+    return {
+      entity: result.entity,
+      data: {
+        summary: [
+          'Resolutions: ' +
+            get('body.data_summary.resolutions.count', result) +
+            ', Articles: ' +
+            get('body.data_summary.articles.count', result) +
+            ', Certs: ' +
+            get('body.data_summary.certificates.count', result) +
+            ', Hashes: ' +
+            get('body.data_summary.hashes.count', result) +
+            ', Host Pairs: ' +
+            get('body.data_summary.host_pairs.count', result) +
+            ', Projects: ' +
+            get('body.data_summary.projects.count', result) +
+            ', Trackers: ' +
+            get('body.data_summary.trackers.count', result) +
+            ', Components: ' +
+            get('body.data_summary.components.count', result)
+        ],
+        details: {
+          summary: result.body
+        }
+      }
+    };
+  } else {
+    result.body.results = flow(get('body.results'), slice(0, options.records))(result);
+
+    // Mutation of tracker
+    result.body.results.forEach((tracker) => {
+      tracker = Object.keys(tracker).length > 0;
+    });
+
+    return {
+      entity: result.entity,
+      data: {
+        summary: ['Trackers:' + result.body.results.length],
+        details: {
+          tracker: result.body.results
+        }
+      }
+    };
+  }
+}
+
 function doLookup(entities, options, cb) {
-  let lookupResults = [];
-  let tasks = [];
+  const lookupResults = [];
+  const errors = [];
+
+  let hasValidIndicator = false;
+  let numConnectionResets = 0;
+  let numThrottled = 0;
+  let numApiKeyLimitedReached = 0;
 
   _setupRegexBlocklists(options);
+
+  if (limiter === null) {
+    _setupLimiter(options);
+  }
 
   Logger.debug(entities);
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      if (entity.type === 'custom') {
-        tasks.push(
-          doDetailsLookup(
-            { path: '/v2/trackers/search', qs: { query: entity.value, type: 'GoogleAnalyticsTrackingId' } },
+      hasValidIndicator = true;
+      limiter.submit(_limiterLookup, entity, options, (err, result) => {
+        const searchLimitObject = reachedSearchLimit(err, result);
+        if (searchLimitObject) {
+          // Tracking for logging purposes
+          if (searchLimitObject.isConnectionReset || searchLimitObject.isGatewayTimeout) numConnectionResets++;
+          if (searchLimitObject.maxRequestQueueLimitHit) numThrottled++;
+          if (searchLimitObject.apiKeyLimitReached) numApiKeyLimitedReached++;
+
+          lookupResults.push({
             entity,
-            options
-          )
-        );
-      } else {
-        tasks.push(doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options));
-      }
+            isVolatile: true, // prevent limit reached results from being cached
+            data: {
+              summary: ['Search limit reached'],
+              details: {
+                summary: searchLimitObject
+              }
+            }
+          });
+        } else if (err) {
+          // a regular error occurred that is not a search limit related error
+          errors.push(err);
+        } else {
+          // no search limit error and no regular error so create a normal lookup object
+          const lookupResultObject = createLookupResultObject(result, options);
+          Logger.trace({ lookupResultObject }, 'lookupResultObject');
+          lookupResults.push(lookupResultObject);
+        }
+
+        // Check if we got all our results back from the limiter
+        if (lookupResults.length + errors.length === entities.length) {
+          if (numConnectionResets > 0 || numThrottled > 0) {
+            Logger.warn(
+              {
+                numEntitiesLookedUp: entities.length,
+                numConnectionResets: numConnectionResets,
+                numLookupsThrottled: numThrottled,
+                numApiKeyLimitedReached
+              },
+              'Lookup Limit Reached'
+            );
+          }
+
+          if (errors.length > 0) {
+            cb(errors);
+          } else {
+            cb(null, lookupResults);
+          }
+        }
+      });
     }
   });
+}
 
-  async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
-    if (err) {
-      Logger.error({ err: err }, 'Error');
-      cb(err);
+function doDetailsLookup(request, entity, options, cb) {
+  let requestOptions = {
+    method: 'GET',
+    uri: `${options.host}${request.path}`,
+    auth: {
+      user: options.user,
+      pass: options.apiKey
+    },
+    qs: request.qs,
+    json: true
+  };
+
+  Logger.trace({ requestOptions }, 'Looking at the Request');
+
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    let processedResult = handleRestError(error, entity, response, body);
+    if (processedResult.error) {
+      cb(processedResult.error);
       return;
     }
-
-    results.forEach((result) => {
-      if (
-        !result.body ||
-        (get('entity.type', result) !== 'custom' &&
-          get('body.data_summary.resolutions.count', result) === 0 &&
-          get('body.data_summary.certificates.count', result) === 0 &&
-          get('body.data_summary.hashes.count', result) === 0 &&
-          get('body.data_summary.projects.count', result) === 0 &&
-          get('body.data_summary.articles.count', result) === 0 &&
-          get('body.data_summary.trackers.count', result) === 0 &&
-          get('body.data_summary.components.count', result) === 0 &&
-          get('body.data_summary.host_pairs.count', result) === 0 &&
-          get('body.data_summary.cookies.count', result) === 0)
-      ) {
-        lookupResults.push({
-          entity: result.entity,
-          data: null
-        });
-      } else if (result.entity.type != 'custom') {
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: [
-              'Resolutions: ' +
-                get('body.data_summary.resolutions.count', result) +
-                ', Articles: ' +
-                get('body.data_summary.articles.count', result) +
-                ', Certs: ' +
-                get('body.data_summary.certificates.count', result) +
-                ', Hashes: ' +
-                get('body.data_summary.hashes.count', result) +
-                ', Host Pairs: ' +
-                get('body.data_summary.host_pairs.count', result) +
-                ', Projects: ' +
-                get('body.data_summary.projects.count', result) +
-                ', Trackers: ' +
-                get('body.data_summary.trackers.count', result) +
-                ', Components: ' +
-                get('body.data_summary.components.count', result)
-            ],
-            details: result.body
-          }
-        });
-      } else {
-        result.body.results = flow(get('body.results'), slice(0, options.records))(result);
-
-        result.body.results.forEach((tracker) => {
-          tracker = Object.keys(tracker).length > 0;
-        });
-
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: ['Trackers:' + result.body.results.length],
-            details: {
-              tracker: result.body.results
-            }
-          }
-        });
-      }
-    });
-
-    Logger.trace({ lookupResults }, 'Results');
-    cb(null, lookupResults);
+    //Logger.trace({ processedResult }, 'Looking at the Result');
+    cb(null, processedResult);
   });
 }
 
-function doDetailsLookup(request, entity, options) {
-  return function (done) {
-    let requestOptions = {
-      method: 'GET',
-      uri: `${options.host}${request.path}`,
-      auth: {
-        user: options.user,
-        pass: options.apiKey
-      },
-      qs: request.qs,
-      json: true
+function reachedSearchLimit(err, result) {
+  const maxRequestQueueLimitHit =
+    (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+
+  let statusCode = _.get(err, 'statusCode', 0);
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+  const apiKeyLimitReached = statusCode === 429;
+  const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
+
+  if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout || apiKeyLimitReached) {
+    return {
+      maxRequestQueueLimitHit,
+      isConnectionReset,
+      isGatewayTimeout,
+      apiKeyLimitReached
     };
-
-    Logger.trace({ requestOptions }, 'Looking at the Request');
-
-    requestWithDefaults(requestOptions, (error, response, body) => {
-      let processedResult = handleRestError(error, entity, response, body);
-
-      if (processedResult.error) {
-        done(processedResult.error);
-        return;
-      }
-      Logger.trace({ processedResult }, 'Looking at the Result');
-      done(null, processedResult);
-    });
-  };
-}
-
-function onDetails(lookupObject, options, cb) {
-  let entity = lookupObject.entity;
-  if (entity.type === 'domain' || entity.type === 'IPv4') {
-    const articles = articlesCache.get('articles');
-    async.parallel(
-      {
-        whois: doDetailsLookup({ path: '/v2/whois', qs: { query: entity.value } }, entity, options),
-        pdns: doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options),
-        malware: doDetailsLookup({ path: '/v2/enrichment/malware', qs: { query: entity.value } }, entity, options),
-        certificates: doDetailsLookup(
-          {
-            path: '/v2/ssl-certificate/search',
-            qs: { query: entity.value, field: 'subjectCommonName' }
-          },
-          entity,
-          options
-        ),
-        ...(!articles
-          ? {
-              articles: doDetailsLookup({ path: '/v2/articles', qs: { sort: 'indicators' } }, entity, options)
-            }
-          : { articles: (done) => done(null, articles) }),
-        ...(options.enableRep && {
-          reputation: doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options)
-        }),
-        ...(options.enablePairs && {
-          parentPairs: doDetailsLookup(
-            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
-            entity,
-            options
-          ),
-          childPairs: doDetailsLookup(
-            { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
-            entity,
-            options
-          )
-        })
-      },
-      (err, { whois, pdns, certificates, malware, reputation, parentPairs, childPairs, articles }) => {
-        if (err) return cb(err);
-
-        if (articles) articlesCache.set('articles', articles);
-
-        lookupObject.data.details = {
-          ...lookupObject.data.details,
-          whois: getBody(whois),
-          pdns: orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
-          certificates: getRecords(options.records, certificates),
-          malware: getRecords(options.records, malware),
-          reputation: getBody(reputation),
-          pairs: flow(
-            concat(getRecords(options.records, parentPairs)),
-            uniqWith(isEqual)
-          )(getRecords(options.records, childPairs)),
-
-          articles: searchArticles(entity, articles)
-        };
-
-        Logger.trace({ lookup: lookupObject.data }, 'Looking at the data after on details.');
-
-        cb(null, lookupObject.data);
-      }
-    );
-  } else {
-    cb(null, lookupObject.data);
   }
+
+  return null;
 }
+
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
-const searchArticles = (entity, articles) =>
-  flow(
-    get('body.articles'),
-    filter(
-      flow(
-        get('indicators'),
-        filter(flow(get('type'), includes(__, get(entity.type, INDICATOR_TYPES)))),
-        flatMap(get('values')),
-        map(toLower),
-        find(includes(flow(get('value'), toLower)(entity)))
-      )
-    )
-  )(articles);
+const getArticles = (recordsCount, result) => {
+  const articles = _.get(result, 'body.articles', []);
+  if (Array.isArray(articles)) {
+    return articles.slice(0, recordsCount);
+  } else {
+    return [];
+  }
+};
 
 function handleRestError(error, entity, res, body) {
   let result;
 
   if (error) {
+    Logger.error('we got an error');
     return {
       error: error,
       detail: 'HTTP Request Error'
@@ -410,6 +395,204 @@ function _isEntityBlocklisted(entity, options) {
   return false;
 }
 
+/**
+ * This is a helper function that wraps the onMessage searches with the required logic to detect search limit lookups
+ *
+ * @param err An error (if any) from the onMessage search lookup
+ * @param data The result of the onMessage search lookup
+ * @param getDataHandler a function that gets invoked if there was no error or search limit reached.  The function
+ * should take the resulting data and process it.  This is customized per data type as each data type needs to be
+ * handled in a slightly different manner.
+ * @param cb The onMessage callback to execute with the return data
+ * @returns {*}
+ */
+function onMessageResultHandler(err, data, getDataHandler, options, cb) {
+  const searchLimitObject = reachedSearchLimit(err, data);
+  if (searchLimitObject) {
+    // The user hit a search limit so we're going to return their current API usage
+    getQuota(options, (err, quota) => {
+      if (err) {
+        Logger.error(err, 'Error fetching user quota');
+      }
+      cb(null, {
+        data: searchLimitObject,
+        quota
+      });
+    });
+  } else if (err) {
+    return cb(err);
+  } else {
+    cb(null, {
+      data: getDataHandler()
+    });
+  }
+}
+
+function onMessage(payload, options, cb) {
+  const entity = payload.entity;
+  switch (payload.searchType) {
+    case 'whois':
+      doDetailsLookup(
+        {
+          path: '/v2/whois',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, whois) => {
+          Logger.trace({ whois }, 'WHOIS Lookup');
+          onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
+        }
+      );
+      break;
+    case 'pdns':
+      doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
+        onMessageResultHandler(
+          err,
+          pdns,
+          () => orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+          options,
+          cb
+        );
+      });
+      break;
+    case 'malware':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/malware',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, malware) => {
+          onMessageResultHandler(err, malware, () => getRecords(options.records, malware), options, cb);
+        }
+      );
+      break;
+    case 'certificates':
+      doDetailsLookup(
+        {
+          path: '/v2/ssl-certificate/search',
+          qs: { query: entity.value, field: 'subjectCommonName' }
+        },
+        entity,
+        options,
+        (err, certificates) => {
+          onMessageResultHandler(err, certificates, () => getRecords(options.records, certificates), options, cb);
+        }
+      );
+      break;
+    case 'pairs':
+      async.parallel(
+        {
+          parentPairs: (done) => {
+            doDetailsLookup(
+              { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'parents' } },
+              entity,
+              options,
+              done
+            );
+          },
+          childPairs: (done) => {
+            doDetailsLookup(
+              { path: '/v2/host-attributes/pairs', qs: { query: entity.value, direction: 'children' } },
+              entity,
+              options,
+              done
+            );
+          }
+        },
+        (err, results) => {
+          const searchLimitObjectParent = reachedSearchLimit(err, results.parentPairs);
+          const searchLimitObjectChild = reachedSearchLimit(err, results.childPairs);
+
+          if (searchLimitObjectParent || searchLimitObjectChild) {
+            // The user hit a search limit so we're going to return their current API usage
+            getQuota(options, (err, quota) => {
+              if (err) {
+                Logger.error(err, 'Error fetching user quota');
+              }
+              cb(null, {
+                data: searchLimitObjectParent || searchLimitObjectChild,
+                quota
+              });
+            });
+          } else if (err) {
+            return cb(err);
+          } else {
+            cb(null, {
+              data: flow(
+                concat(getRecords(options.records, results.parentPairs)),
+                uniqWith(isEqual)
+              )(getRecords(options.records, results.childPairs))
+            });
+          }
+        }
+      );
+      break;
+    case 'reputation':
+      doDetailsLookup({ path: '/v2/reputation', qs: { query: entity.value } }, entity, options, (err, reputation) => {
+        Logger.trace({ reputation }, 'Reputation Result');
+        onMessageResultHandler(err, reputation, () => getBody(reputation), options, cb);
+      });
+      break;
+    case 'articles':
+      doDetailsLookup(
+        {
+          path: '/v2/articles/indicator',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, articles) => {
+          Logger.trace({ articles }, 'Articles');
+          onMessageResultHandler(err, articles, () => getArticles(options.records, articles), options, cb);
+        }
+      );
+      break;
+    case 'articlesById':
+      doDetailsLookup({ path: `/v2/articles/${payload.id}` }, entity, options, (err, article) => {
+        onMessageResultHandler(err, article, () => article, options, cb);
+      });
+      break;
+    case 'summary':
+      doDetailsLookup({ path: '/v2/cards/summary', qs: { query: entity.value } }, entity, options, (err, summary) => {
+        onMessageResultHandler(
+          err,
+          summary,
+          () => {
+            const lookupResult = createLookupResultObject(summary, options);
+            return lookupResult.data.details.summary;
+          },
+          options,
+          cb
+        );
+      });
+      break;
+    case 'quota':
+      getQuota(options, (err, quota) => {
+        if (err) return cb(err);
+        cb(null, {
+          quota
+        });
+      });
+      break;
+  }
+}
+
+function getQuota(options, cb) {
+  // we can just use a dummy entity object here
+  const entity = null;
+
+  doDetailsLookup({ path: '/v2/account/quota' }, entity, options, (err, quota) => {
+    if (err) {
+      return cb(err);
+    }
+
+    cb(null, quota.body);
+  });
+}
+
 function validateOptions(userOptions, cb) {
   let errors = [];
   if (
@@ -435,8 +618,8 @@ function validateOptions(userOptions, cb) {
 }
 
 module.exports = {
-  doLookup: doLookup,
-  onDetails: onDetails,
-  startup: startup,
-  validateOptions: validateOptions
+  doLookup,
+  startup,
+  onMessage,
+  validateOptions
 };

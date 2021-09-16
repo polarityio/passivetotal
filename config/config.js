@@ -31,6 +31,7 @@ module.exports = {
       regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
     }
   ],
+  onDemandOnly: true,
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -50,10 +51,18 @@ module.exports = {
    */
   block: {
     component: {
-      file: './component/pt-block.js'
+      file: './component/block.js'
     },
     template: {
-      file: './templates/pt-block.hbs'
+      file: './templates/block.hbs'
+    }
+  },
+  summary: {
+    component: {
+      file: './component/summary.js'
+    },
+    template: {
+      file: './templates/summary.hbs'
     }
   },
   request: {
@@ -169,6 +178,26 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Search Requests',
+      description:
+        'Maximum number of concurrent search requests (defaults to 10).  Integration must be restarted after changing this option.',
+      default: 10,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Searches',
+      description:
+        'Minimum amount of time in milliseconds between each entity search (defaults to 50).  Integration must be restarted after changing this option.',
+      default: 50,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };

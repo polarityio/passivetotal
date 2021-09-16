@@ -1,0 +1,26 @@
+{{#if (or summary.isConnectionReset summary.maxRequestQueueLimitHit summary.isGatewayTimeout summary.apiKeyLimitReached)}}
+    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">
+            {{fa-icon icon="exclamation-circle" fixedWidth=true class="summary-tag-icon"}}
+            {{#if summary.apiKeyLimitReached}}
+                Search Quota Exceeded
+            {{else}}
+                Search Limit Reached
+            {{/if}}
+        </span>
+    </span>
+{{!-- on a manual lookup retry we could get back an empty result so we check for it here --}}
+{{else if block.data.summary}}
+    {{#each block.data.summary as | tag |}}
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">{{tag}}</span>
+        </span>
+    {{/each}}
+{{else}}
+    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">No Result</span>
+    </span>
+{{/if}}
