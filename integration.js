@@ -169,6 +169,7 @@ function createLookupResultObject(result, options) {
 function doLookup(entities, options, cb) {
   const lookupResults = [];
   const errors = [];
+  const blockedEntities = [];
 
   let hasValidIndicator = false;
   let numConnectionResets = 0;
@@ -237,6 +238,13 @@ function doLookup(entities, options, cb) {
       });
     }
   });
+
+  // This can occur if there are no valid entities to lookup so we need a safe guard to make
+  // sure we still call the callback.
+  if (!hasValidIndicator) {
+    Logger.trace('No Valid Indicators to Lookup');
+    cb(null, []);
+  }
 }
 
 function doDetailsLookup(request, entity, options, cb) {
