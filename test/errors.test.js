@@ -49,11 +49,11 @@ test('502 response should result in `isGatewayTimeout`', (done) => {
   doLookup([ip], options, (err, lookupResults) => {
     console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(true);
-    expect(details.apiKeyLimitReached).toBe(false);
+    const summary = lookupResults[0].data.details.summary;
+    expect(summary.maxRequestQueueLimitHit).toBe(false);
+    expect(summary.isConnectionReset).toBe(false);
+    expect(summary.isGatewayTimeout).toBe(true);
+    expect(summary.apiKeyLimitReached).toBe(false);
     done();
   });
 });
@@ -63,11 +63,11 @@ test('504 response should result in `isGatewayTimeout`', (done) => {
   doLookup([ip], options, (err, lookupResults) => {
     //console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(true);
-    expect(details.apiKeyLimitReached).toBe(false);
+    const summary = lookupResults[0].data.details.summary;
+    expect(summary.maxRequestQueueLimitHit).toBe(false);
+    expect(summary.isConnectionReset).toBe(false);
+    expect(summary.isGatewayTimeout).toBe(true);
+    expect(summary.apiKeyLimitReached).toBe(false);
     done();
   });
 });
@@ -77,11 +77,26 @@ test('504 response should result in `isGatewayTimeout`', (done) => {
   doLookup([ip], options, (err, lookupResults) => {
     //console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(false);
-    expect(details.apiKeyLimitReached).toBe(true);
+    const summary = lookupResults[0].data.details.summary;
+    expect(summary.maxRequestQueueLimitHit).toBe(false);
+    expect(summary.isConnectionReset).toBe(false);
+    expect(summary.isGatewayTimeout).toBe(false);
+    expect(summary.apiKeyLimitReached).toBe(true);
+    done();
+  });
+});
+
+
+test('500 response should result in `isGatewayTimeout`', (done) => {
+  const scope = nock(host).get(/.*/).reply(500);
+  doLookup([ip], options, (err, lookupResults) => {
+    //console.info(JSON.stringify(lookupResults, null, 4));
+    expect(lookupResults.length).toBe(1);
+    const summary = lookupResults[0].data.details.summary;
+    expect(summary.maxRequestQueueLimitHit).toBe(false);
+    expect(summary.isConnectionReset).toBe(false);
+    expect(summary.isGatewayTimeout).toBe(true);
+    expect(summary.apiKeyLimitReached).toBe(false);
     done();
   });
 });
@@ -91,21 +106,21 @@ test('ECONNRESET response should result in `isConnectionReset`', (done) => {
   doLookup([ip], options, (err, lookupResults) => {
     //console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(true);
-    expect(details.isGatewayTimeout).toBe(false);
-    expect(details.apiKeyLimitReached).toBe(false);
+    const summary = lookupResults[0].data.details.summary;
+    expect(summary.maxRequestQueueLimitHit).toBe(false);
+    expect(summary.isConnectionReset).toBe(true);
+    expect(summary.isGatewayTimeout).toBe(false);
+    expect(summary.apiKeyLimitReached).toBe(false);
     done();
   });
 });
 
-test('500 response should return a normal integration error', (done) => {
-  const scope = nock(host).get(/.*/).reply(500);
+test('400 response should return a normal integration error', (done) => {
+  const scope = nock(host).get(/.*/).reply(400);
   doLookup([ip], options, (err, lookupResults) => {
     console.info(JSON.stringify(err, null, 4));
     expect(err.length).toBe(1);
-    expect(err[0].statusCode).toBe(500);
+    expect(err[0].statusCode).toBe(400);
     done();
   });
 });
