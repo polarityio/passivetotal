@@ -277,7 +277,7 @@ function reachedSearchLimit(err, result) {
     (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
   let statusCode = _.get(err, 'statusCode', 0);
-  const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || statusCode === 500;
   const apiKeyLimitReached = statusCode === 429;
   const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
 
