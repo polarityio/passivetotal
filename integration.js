@@ -216,7 +216,7 @@ function doLookup(entities, options, cb) {
         }
 
         // Check if we got all our results back from the limiter
-        if (lookupResults.length + errors.length === entities.length) {
+        if (lookupResults.length + errors.length + blockedEntities.length === entities.length) {
           if (numConnectionResets > 0 || numThrottled > 0) {
             Logger.warn(
               {
@@ -236,6 +236,8 @@ function doLookup(entities, options, cb) {
           }
         }
       });
+    } else {
+      blockedEntities.push(entity);
     }
   });
 
@@ -308,7 +310,7 @@ function handleRestError(error, entity, res, body) {
   let result;
 
   if (error) {
-    Logger.error('we got an error');
+    Logger.error({ error }, 'we got an error');
     return {
       error: error,
       detail: 'HTTP Request Error'
