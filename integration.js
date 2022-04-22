@@ -421,8 +421,6 @@ function _isEntityBlocklisted(entity, options) {
 function onMessageResultHandler(err, data, getDataHandler, options, cb) {
   const searchLimitObject = reachedSearchLimit(err, data);
 
-  Logger.trace({ DATA: 1111111111111, getDataHandler });
-
   if (searchLimitObject) {
     // The user hit a search limit so we're going to return their current API usage
     getQuota(options, (err, quota) => {
@@ -474,7 +472,7 @@ function onMessage(payload, options, cb) {
             Logger.trace({ whois }, 'whois');
             //When the request for whois data is made with history = true, the response is an array of objects, opposed to a single object,
             //to avoid having to manage the different response shapes, we put the body of the response for single object in an array.
-            onMessageResultHandler(err, whois, () => getBody({ body: [whois.body] }), options, cb);
+            onMessageResultHandler(err, whois, () => getBody({ body: { whoisData: [whois.body] } }), options, cb);
           }
         }
       );
