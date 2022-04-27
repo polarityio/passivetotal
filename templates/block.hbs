@@ -193,15 +193,15 @@
           class='nav-link {{if (or (eq activeTab "whois") (not activeTab)) "active"}}'
           href='#'
         >
-          WHOIS ({{details.whois.totalRecords}})
+          WHOIS
           {{#if block._state.searchRunning.whois}}{{fa-icon
               'spinner-third'
               fixedWidth=true
               spin=true
               class='loading-icon'
             }}{{/if}}
-          {{#if details.whois.name}}
-            ({{if details.whois.name 'Found' 'Unknown'}})
+          {{#if details.whois.totalRecords}}
+            ({{if details.whois.totalRecords details.whois.totalRecords '(1)'}})
           {{/if}}
         </a>
       </li>
@@ -807,194 +807,194 @@
               {{/if}}
             </div>
 
-            {{!-- {{#if hasWhoisAdmin}} --}}
-            <h1 class='p-title'>
-              {{fa-icon icon='user-cog' fixedWidth=true}}
-              Admin
-            </h1>
-            <div class='mb-2'>
-              {{#if detail.admin.name}}
-                <div>
-                  <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{detail.admin.name}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.organization}}
-                <div>
-                  <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{detail.admin.organization}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{detail.admin.email}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.telephone}}
-                <div>
-                  <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{detail.admin.telephone}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.street}}
-                <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{detail.admin.street}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.postalCode}}
-                <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{detail.admin.postalCode}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.city}}
-                <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{detail.admin.city}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.state}}
-                <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{detail.admin.state}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.admin.country}}
-                <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{detail.admin.country}}</span>
-                </div>
-              {{/if}}
-            </div>
-            {{!-- {{/if}} --}}
+            {{#if detail.admin.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-cog' fixedWidth=true}}
+                Admin
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.admin.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.admin.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.admin.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.admin.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.admin.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.admin.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.admin.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.admin.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.admin.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.admin.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
 
-            {{!-- {{#if hasWhoisRegistrant}} --}}
-            <h1 class='p-title'>
-              {{fa-icon icon='user-tie' fixedWidth=true}}
-              Registrant
-            </h1>
-            <div class='mb-2'>
-              {{#if detail.registrant.name}}
-                <div>
-                  <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{detail.registrant.name}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.organization}}
-                <div>
-                  <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{detail.registrant.organization}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{detail.registrant.email}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.telephone}}
-                <div>
-                  <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{detail.registrant.telephone}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.street}}
-                <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{detail.registrant.street}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.postalCode}}
-                <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{detail.registrant.postalCode}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.city}}
-                <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{detail.registrant.city}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.state}}
-                <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{detail.registrant.state}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.registrant.country}}
-                <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{detail.registrant.country}}</span>
-                </div>
-              {{/if}}
-            </div>
-            {{!-- {{/if}} --}}
+            {{#if detail.registrant.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-tie' fixedWidth=true}}
+                Registrant
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.registrant.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.registrant.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.registrant.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.registrant.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.registrant.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.registrant.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.registrant.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.registrant.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.registrant.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.registrant.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
 
-            {{!-- {{#if hasWhoisTech}} --}}
-            <h1 class='p-title'>
-              {{fa-icon icon='user-visor' fixedWidth=true}}
-              Tech
-            </h1>
-            <div class='mb-2'>
-              {{#if detail.tech.name}}
-                <div>
-                  <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{detail.tech.name}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.organization}}
-                <div>
-                  <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{detail.tech.organization}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{detail.tech.email}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.telephone}}
-                <div>
-                  <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{detail.tech.telephone}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.street}}
-                <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{detail.tech.street}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.postalCode}}
-                <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{detail.tech.postalCode}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.city}}
-                <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{detail.tech.city}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.state}}
-                <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{detail.tech.state}}</span>
-                </div>
-              {{/if}}
-              {{#if detail.tech.country}}
-                <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{detail.tech.country}}</span>
-                </div>
-              {{/if}}
-            </div>
-            {{!-- {{/if}} --}}
+            {{#if detail.tech.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-visor' fixedWidth=true}}
+                Tech
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.tech.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.tech.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.tech.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.tech.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.tech.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.tech.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.tech.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.tech.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.tech.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.tech.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
           {{/each}}
         {{else}}
           <div class='alert alert-info mt-2' role='alert'>
