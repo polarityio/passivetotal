@@ -294,7 +294,7 @@ function reachedSearchLimit(err, result) {
 
   return null;
 }
-
+const getBodyWithResults = getOr([], 'body.results');
 const getBody = getOr([], 'body');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
@@ -440,6 +440,7 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
+  Logger.trace({ ENTITY: 23123123123123, payload });
   switch (payload.searchType) {
     case 'whois':
       doDetailsLookup(
@@ -452,6 +453,30 @@ function onMessage(payload, options, cb) {
         (err, whois) => {
           Logger.trace({ whois }, 'WHOIS Lookup');
           onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
+        }
+      );
+      break;
+    case 'osnit':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/osint',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, osnit) => {
+          Logger.trace({ osnit }, 'osnit Lookup');
+
+          onMessageResultHandler(
+            err,
+            osnit,
+            () =>
+              getBodyWithResults({
+                body: { results: { osnitData: osnit.body.results } }
+              }),
+            options,
+            cb
+          );
         }
       );
       break;
