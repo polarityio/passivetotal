@@ -7,6 +7,7 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+const { on } = require('events');
 
 let Logger;
 let limiter = null;
@@ -440,7 +441,7 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
-  Logger.trace({ ENTITY: 23123123123123, payload });
+
   switch (payload.searchType) {
     case 'whois':
       doDetailsLookup(

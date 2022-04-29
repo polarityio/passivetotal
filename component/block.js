@@ -74,7 +74,7 @@ polarity.export = PolarityComponent.extend({
   },
   actions: {
     changeTab: function (tabName) {
-      console.log(tabName)
+      console.log(tabName);
       this.set('activeTab', tabName);
       // Only attempt to load data once when users click on a tab
       if (this.getInitialLoadAttempted(tabName) === false) {
@@ -92,6 +92,10 @@ polarity.export = PolarityComponent.extend({
     },
     getQuota: function () {
       this.fetchQuota();
+    },
+    toggleShowResults: function (resultType) {
+      this.toggleProperty(resultType);
+      this.get('block').notifyPropertyChange('data');
     }
   },
   runSearch(searchType) {
@@ -103,11 +107,11 @@ polarity.export = PolarityComponent.extend({
       entity: this.get('block.entity')
     };
 
-    console.log(payload)
+    console.log(payload);
 
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        console.log('HELLO', result);
+    
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);

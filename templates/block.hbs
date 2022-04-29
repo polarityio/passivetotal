@@ -218,8 +218,8 @@
               spin=true
               class='loading-icon'
             }}{{/if}}
-          {{#if malwareIsLoaded}}
-            ({{details.malware.length}})
+          {{#if details.osnit.osnitData.length}}
+            ({{details.osnit.osnitData.length}})
           {{/if}}
         </a>
       </li>
@@ -1013,64 +1013,6 @@
           </div>
         {{/if}}
       {{/if}}
-    {{/if}}
-
-    {{#if (eq activeTab 'osnit')}}
-      <h1 class='p-title'>
-        {{fa-icon 'search' fixedWidth=true}}
-        OSNIT Details
-      </h1>
-      {{#each details.osnit.osnitData as |info|}}
-        <div class='mb-1'>
-
-          {{#if info.source}}
-            <div>
-              <span class='p-key'>Source: </span>
-              <span class='p-value'>{{info.source}}</span>
-            </div>
-          {{/if}}
-
-          {{#if info.sourceUrl}}
-            <div>
-              <span class='p-key'>Source URL: </span>
-              <span class='p-value'>{{info.sourceUrl}}</span>
-            </div>
-          {{/if}}
-
-          <div class='toggle-header'>
-            <span class='p-action' {{action 'toggleShowResults' 'details'}}>
-              {{fa-icon 'laptop' fixedWidth=true}}
-              Registry Keys
-              {{fa-icon (if details 'caret-up' 'caret-down') fixedWidth=true}}
-            </span>
-          </div>
-
-          {{#if info.indicators.length}}
-            {{#each info.indicators as |indicator|}}
-              <div>
-                <span class='p-key'>Indicator: </span>
-                <span class='p-value'>{{indicator}}</span>
-              </div>
-            {{/each}}
-          {{/if}}
-          {{#if info.sourceUrl}}
-            <div>
-              <span class='p-key'>Source URL: </span>
-              <span class='p-value'>{{info.sourceUrl}}</span>
-            </div>
-          {{/if}}
-          {{#if info.tags.length}}
-            <div class='tags'>
-              <span class='p-key'>Tags: </span>
-              {{#each info.tags as |tag|}}
-                <div>
-                  <span class='tag'>{{tag}}</span>
-                </div>
-              {{/each}}
-            </div>
-          {{/if}}
-        </div>
-      {{/each}}
     {{/if}}
 
     {{#if (eq activeTab 'articles')}}
@@ -2221,5 +2163,150 @@
         {{/if}}
       {{/if}}
     </div>
+  {{/if}}
+{{/if}}
+
+{{! test }}
+{{#if (eq activeTab 'osnit')}}
+  {{#if (and block._state.searchRunning.osnit (not block._state.initialLoadAttempted.osnit))}}
+    <div class='alert alert-info mt-2' role='alert'>
+      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+      Loading OSNIT
+    </div>
+  {{else if (or
+    details.osnit.isConnectionReset
+    details.osnit.maxRequestQueueLimitHit
+    details.osnit.isGatewayTimeout
+    details.osnit.apiKeyLimitReached
+    details.osnit.onMessageTimeout
+  )}}
+    {{#unless details.osnit.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'osnit'}}>
+        {{#if block._state.searchRunning.osnit}}
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        {{else}}
+          Retry osnit Search
+        {{/if}}
+      </button>
+    {{/unless}}
+    <div class='mt-1'>
+      {{#if details.osnit.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry osnit
+          Search" button.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
+            run the search via the PassiveTotal website instead.</span>
+        </div>
+      {{else if details.osnit.apiKeyLimitReached}}
+        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+          will be able to run searches again.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
+            quota.</span>
+        </div>
+        {{#if details.quota.user}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches:</span>
+              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                of
+                {{details.quota.user.licenseLimits.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration: </span>
+              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.user.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+        {{#if details.quota.organization}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                Your Organization Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches: </span>
+              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                of
+                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration:</span>
+              <span>{{details.quota.organization.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class='mt-1'>
+          <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
+            osnit Search" button.</span>
+        </div>
+      {{/if}}
+    </div>
+  {{else}}
+    {{#if details.osnit.osnitData.length}}
+      <div class='osnit-container'>
+        <h1 class='p-title'>
+          {{fa-icon 'search' fixedWidth=true}}
+          OSNIT Details
+        </h1>
+        {{#each details.osnit.osnitData as |info|}}
+          <div class='mb-3'>
+            {{#if info.source}}
+              <div>
+                <span class='p-key'>Source: </span>
+                <span class='p-value'>{{info.source}}</span>
+              </div>
+            {{/if}}
+
+            {{#if info.sourceUrl}}
+              <div>
+                <span class='p-key'>Source URL: </span>
+                <span class='p-value'>{{info.sourceUrl}}</span>
+              </div>
+            {{/if}}
+
+            {{#if info.tags.length}}
+              <div>
+                <span class='p-key'>Tags: </span>
+                {{#each info.tags as |tag|}}
+                  <div class='tag-value'>
+                    <span class='tag'>{{tag}}</span>
+                  </div>
+                {{/each}}
+              </div>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class='alert alert-info mt-2' role='alert'>
+        No OSNIT Details Found
+      </div>
+    {{/if}}
   {{/if}}
 {{/if}}
