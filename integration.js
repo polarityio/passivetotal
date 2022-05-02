@@ -159,7 +159,7 @@ function createLookupResultObject(result, options) {
       data: {
         summary: ['Trackers:' + result.body.results.length],
         details: {
-          tracker: result.body.resultsFet
+          tracker: result.body.results
         }
       }
     };
