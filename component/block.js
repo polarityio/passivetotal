@@ -8,8 +8,11 @@ polarity.export = PolarityComponent.extend({
   activeTab: 'summary',
   errorMsg: '',
   runningRetrySearch: false,
+  subSubdomains: false, 
   init() {
     this._super(...arguments);
+
+    this.set('showSubdomains', this.get('details.subdomains.subdomains'))
 
     if (!this.get('block._state')) {
       this.set('block._state', {});
@@ -22,7 +25,8 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        quota: false
+        quota: false,
+        subdomains: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -33,20 +37,21 @@ polarity.export = PolarityComponent.extend({
         certificates: false,
         pairs: false,
         reputation: false,
-        articles: false
+        articles: false,
+        subdomains: false
       });
     }
   },
-  hasWhoisAdmin: Ember.computed('details.whois.admin', function(){
-    const admin = Object.keys(this.get('details.whois.admin'))
+  hasWhoisAdmin: Ember.computed('details.whois.admin', function () {
+    const admin = Object.keys(this.get('details.whois.admin'));
     return admin ? admin.length > 0 : false;
   }),
-  hasWhoisTech: Ember.computed('details.whois.tech', function(){
-    const tech = Object.keys(this.get('details.whois.tech'))
+  hasWhoisTech: Ember.computed('details.whois.tech', function () {
+    const tech = Object.keys(this.get('details.whois.tech'));
     return tech ? tech.length > 0 : false;
   }),
-  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function(){
-    const registrant = Object.keys(this.get('details.whois.registrant'))
+  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function () {
+    const registrant = Object.keys(this.get('details.whois.registrant'));
     return registrant ? registrant.length > 0 : false;
   }),
   articlesIsLoaded: Ember.computed('details.articles', function () {
@@ -89,6 +94,10 @@ polarity.export = PolarityComponent.extend({
     },
     getQuota: function () {
       this.fetchQuota();
+    },
+    toggleShowResults: function (resultType) {
+      this.toggleProperty(resultType);
+      this.get('block').notifyPropertyChange('data');
     }
   },
   runSearch(searchType) {

@@ -441,6 +441,20 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
   switch (payload.searchType) {
+    case 'subdomains':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/subdomains',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, subdomains) => {
+          Logger.trace({ subdomains }, 'subdomains Lookup');
+          onMessageResultHandler(err, subdomains, () => getBody(subdomains), options, cb);
+        }
+      );
+      break;
     case 'whois':
       doDetailsLookup(
         {
