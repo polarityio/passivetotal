@@ -296,6 +296,7 @@ function reachedSearchLimit(err, result) {
 }
 
 const getBody = getOr([], 'body');
+const getBodyWithResults = getOr([], 'body.results');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
   const articles = _.get(result, 'body.articles', []);
@@ -457,10 +458,16 @@ function onMessage(payload, options, cb) {
       break;
     case 'pdns':
       doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
+        const resolutions = orderBy('lastSeen', 'asc', pdns.body.results.slice(0, options.records));
         onMessageResultHandler(
           err,
           pdns,
-          () => orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+          () =>
+            getBodyWithResults({
+              body: {
+                results: { pdnsData: resolutions, totalRecords: pdns.body.results.length }
+              }
+            }),
           options,
           cb
         );

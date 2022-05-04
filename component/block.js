@@ -37,16 +37,16 @@ polarity.export = PolarityComponent.extend({
       });
     }
   },
-  hasWhoisAdmin: Ember.computed('details.whois.admin', function(){
-    const admin = Object.keys(this.get('details.whois.admin'))
+  hasWhoisAdmin: Ember.computed('details.whois.admin', function () {
+    const admin = Object.keys(this.get('details.whois.admin'));
     return admin ? admin.length > 0 : false;
   }),
-  hasWhoisTech: Ember.computed('details.whois.tech', function(){
-    const tech = Object.keys(this.get('details.whois.tech'))
+  hasWhoisTech: Ember.computed('details.whois.tech', function () {
+    const tech = Object.keys(this.get('details.whois.tech'));
     return tech ? tech.length > 0 : false;
   }),
-  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function(){
-    const registrant = Object.keys(this.get('details.whois.registrant'))
+  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function () {
+    const registrant = Object.keys(this.get('details.whois.registrant'));
     return registrant ? registrant.length > 0 : false;
   }),
   articlesIsLoaded: Ember.computed('details.articles', function () {
