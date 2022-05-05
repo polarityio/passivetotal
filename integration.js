@@ -7,6 +7,7 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+const { Server } = require('http');
 
 let Logger;
 let limiter = null;
@@ -296,6 +297,7 @@ function reachedSearchLimit(err, result) {
 }
 
 const getBody = getOr([], 'body');
+const getBodyWithResults = getOr([], 'body.results');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
   const articles = _.get(result, 'body.articles', []);
@@ -441,6 +443,32 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
   switch (payload.searchType) {
+    case 'services':
+      doDetailsLookup(
+        {
+          path: '/v2/services',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, services) => {
+          Logger.trace({ services }, 'services Lookup');
+
+          onMessageResultHandler(
+            err,
+            services,
+            () =>
+              getBodyWithResults({
+                body: {
+                  results: { servicesData: services.body.results, totalRecords: services.body.totalRecords }
+                }
+              }),
+            options,
+            cb
+          );
+        }
+      );
+      break;
     case 'whois':
       doDetailsLookup(
         {

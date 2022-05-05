@@ -22,7 +22,8 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        quota: false
+        quota: false,
+        services: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -33,20 +34,21 @@ polarity.export = PolarityComponent.extend({
         certificates: false,
         pairs: false,
         reputation: false,
-        articles: false
+        articles: false,
+        services: false
       });
     }
   },
-  hasWhoisAdmin: Ember.computed('details.whois.admin', function(){
-    const admin = Object.keys(this.get('details.whois.admin'))
+  hasWhoisAdmin: Ember.computed('details.whois.admin', function () {
+    const admin = Object.keys(this.get('details.whois.admin'));
     return admin ? admin.length > 0 : false;
   }),
-  hasWhoisTech: Ember.computed('details.whois.tech', function(){
-    const tech = Object.keys(this.get('details.whois.tech'))
+  hasWhoisTech: Ember.computed('details.whois.tech', function () {
+    const tech = Object.keys(this.get('details.whois.tech'));
     return tech ? tech.length > 0 : false;
   }),
-  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function(){
-    const registrant = Object.keys(this.get('details.whois.registrant'))
+  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function () {
+    const registrant = Object.keys(this.get('details.whois.registrant'));
     return registrant ? registrant.length > 0 : false;
   }),
   articlesIsLoaded: Ember.computed('details.articles', function () {
@@ -101,6 +103,7 @@ polarity.export = PolarityComponent.extend({
     };
     this.sendIntegrationMessage(payload)
       .then((result) => {
+        console.log(result);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
