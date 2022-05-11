@@ -457,7 +457,7 @@ function onMessage(payload, options, cb) {
         }
       );
       break;
-    case 'osnit':
+    case 'osint':
       doDetailsLookup(
         {
           path: '/v2/enrichment/osint',
@@ -465,15 +465,15 @@ function onMessage(payload, options, cb) {
         },
         entity,
         options,
-        (err, osnit) => {
-          Logger.trace({ osnit }, 'osnit Lookup');
+        (err, osint) => {
+          Logger.trace({ osint }, 'osint Lookup');
 
           onMessageResultHandler(
             err,
-            osnit,
+            osint,
             () =>
               getBodyWithResults({
-                body: { results: { osnitData: osnit.body.results } }
+                body: { results: { osintData: osint.body.results } }
               }),
             options,
             cb

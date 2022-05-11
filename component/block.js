@@ -23,7 +23,7 @@ polarity.export = PolarityComponent.extend({
         reputation: false,
         articles: false,
         quota: false,
-        osnit: false
+        osint: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -35,7 +35,7 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        osnit: false
+        osint: false
       });
     }
   },

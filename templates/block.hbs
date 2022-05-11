@@ -207,19 +207,19 @@
       </li>
       <li class='nav-item'>
         <a
-          {{action 'changeTab' 'osnit'}}
-          class='nav-link {{if (or (eq activeTab "osnit") (not activeTab)) "active"}}'
+          {{action 'changeTab' 'osint'}}
+          class='nav-link {{if (or (eq activeTab "osint") (not activeTab)) "active"}}'
           href='#'
         >
-          OSNIT
+          OSINT
           {{#if block._state.searchRunning.malware}}{{fa-icon
               'spinner-third'
               fixedWisdth=true
               spin=true
               class='loading-icon'
             }}{{/if}}
-          {{#if details.osnit.osnitData.length}}
-            ({{details.osnit.osnitData.length}})
+          {{#if details.osint.osintData.length}}
+            ({{details.osint.osintData.length}})
           {{/if}}
         </a>
       </li>
@@ -2167,31 +2167,31 @@
 {{/if}}
 
 {{! test }}
-{{#if (eq activeTab 'osnit')}}
-  {{#if (and block._state.searchRunning.osnit (not block._state.initialLoadAttempted.osnit))}}
+{{#if (eq activeTab 'osint')}}
+  {{#if (and block._state.searchRunning.osint (not block._state.initialLoadAttempted.osint))}}
     <div class='alert alert-info mt-2' role='alert'>
       {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-      Loading OSNIT
+      Loading OSINT
     </div>
   {{else if (or
-    details.osnit.isConnectionReset
-    details.osnit.maxRequestQueueLimitHit
-    details.osnit.isGatewayTimeout
-    details.osnit.apiKeyLimitReached
-    details.osnit.onMessageTimeout
+    details.osint.isConnectionReset
+    details.osint.maxRequestQueueLimitHit
+    details.osint.isGatewayTimeout
+    details.osint.apiKeyLimitReached
+    details.osint.onMessageTimeout
   )}}
-    {{#unless details.osnit.apiKeyLimitReached}}
-      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'osnit'}}>
-        {{#if block._state.searchRunning.osnit}}
+    {{#unless details.osint.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'osint'}}>
+        {{#if block._state.searchRunning.osint}}
           {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
         {{else}}
-          Retry osnit Search
+          Retry OSINT Search
         {{/if}}
       </button>
     {{/unless}}
     <div class='mt-1'>
-      {{#if details.osnit.onMessageTimeout}}
-        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry osnit
+      {{#if details.osint.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry osint
           Search" button.</span>
         <div class='mt-1'>
           <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
@@ -2202,7 +2202,7 @@
           <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
             run the search via the PassiveTotal website instead.</span>
         </div>
-      {{else if details.osnit.apiKeyLimitReached}}
+      {{else if details.osint.apiKeyLimitReached}}
         <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
           You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
           will be able to run searches again.</span>
@@ -2263,18 +2263,18 @@
       {{else}}
         <div class='mt-1'>
           <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
-            osnit Search" button.</span>
+            OSINT Search" button.</span>
         </div>
       {{/if}}
     </div>
   {{else}}
-    {{#if details.osnit.osnitData.length}}
-      <div class='osnit-container'>
+    {{#if details.osint.osintData.length}}
+      <div class='osint-container'>
         <h1 class='p-title'>
           {{fa-icon 'search' fixedWidth=true}}
-          OSNIT Details
+          OSINT Details
         </h1>
-        {{#each details.osnit.osnitData as |info|}}
+        {{#each details.osint.osintData as |info|}}
           <div class='mb-3'>
             {{#if info.source}}
               <div>
@@ -2305,7 +2305,7 @@
       </div>
     {{else}}
       <div class='alert alert-info mt-2' role='alert'>
-        No OSNIT Details Found
+        No OSINT Details Found
       </div>
     {{/if}}
   {{/if}}
