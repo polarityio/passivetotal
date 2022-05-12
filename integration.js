@@ -296,7 +296,7 @@ function reachedSearchLimit(err, result) {
 
   return null;
 }
-const getBodyWithResults = getOr([], 'body.results');
+
 const getBody = getOr([], 'body');
 const getBodyWithResults = getOr([], 'body.results');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
