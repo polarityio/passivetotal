@@ -133,6 +133,15 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'searchHistorical',
+      name: 'WHOIS historical data',
+      description: 'Ability to search WHOIS historical data',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'enableRep',
       name: 'Enable Reputation Lookup',
       description:
