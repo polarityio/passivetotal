@@ -205,24 +205,6 @@
           {{/if}}
         </a>
       </li>
-      <li class='nav-item'>
-        <a
-          {{action 'changeTab' 'services'}}
-          class='nav-link {{if (or (eq activeTab "services") (not activeTab)) "active"}}'
-          href='#'
-        >
-          Services/Ports
-          {{#if block._state.searchRunning.whois}}{{fa-icon
-              'spinner-third'
-              fixedWidth=true
-              spin=true
-              class='loading-icon'
-            }}{{/if}}
-          {{#if details.whois.name}}
-            ({{if details.whois.name 'Found' 'Unknown'}})
-          {{/if}}
-        </a>
-      </li>
       {{#if (gt summary.data_summary.articles.count 0)}}
         <li class='nav-item'>
           <a
@@ -278,6 +260,24 @@
             }}{{/if}}
           {{#if malwareIsLoaded}}
             ({{details.malware.length}})
+          {{/if}}
+        </a>
+      </li>
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'services'}}
+          class='nav-link {{if (or (eq activeTab "services") (not activeTab)) "active"}}'
+          href='#'
+        >
+          Services
+          {{#if block._state.searchRunning.services}}{{fa-icon
+              'spinner-third'
+              fixedWisdth=true
+              spin=true
+              class='loading-icon'
+            }}{{/if}}
+          {{#if details.services.servicesData}}
+            ({{details.services.servicesData.length}})
           {{/if}}
         </a>
       </li>
@@ -2169,30 +2169,30 @@
   {{/if}}
 
   {{#if (eq activeTab 'services')}}
-    {{#if (and block._state.searchRunning.articles (not block._state.initialLoadAttempted.articles))}}
+    {{#if (and block._state.searchRunning.services (not block._state.initialLoadAttempted.services))}}
       <div class='alert alert-info mt-2' role='alert'>
         {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-        Loading Articles
+        Loading Services
       </div>
     {{else if (or
-      details.articles.isConnectionReset
-      details.articles.maxRequestQueueLimitHit
-      details.articles.isGatewayTimeout
-      details.articles.apiKeyLimitReached
-      details.articles.onMessageTimeout
+      details.services.isConnectionReset
+      details.services.maxRequestQueueLimitHit
+      details.services.isGatewayTimeout
+      details.services.apiKeyLimitReached
+      details.services.onMessageTimeout
     )}}
-      {{#unless details.articles.apiKeyLimitReached}}
-        <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'articles'}}>
-          {{#if block._state.searchRunning.articles}}
+      {{#unless details.services.apiKeyLimitReached}}
+        <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'services'}}>
+          {{#if block._state.searchRunning.services}}
             {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
           {{else}}
-            Retry Articles Search
+            Retry Services Search
           {{/if}}
         </button>
       {{/unless}}
       <div class='mt-1'>
-        {{#if details.articles.onMessageTimeout}}
-          <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Articles
+        {{#if details.services.onMessageTimeout}}
+          <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry services
             Search" button.</span>
           <div class='mt-1'>
             <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
@@ -2203,7 +2203,7 @@
             <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
               run the search via the PassiveTotal website instead.</span>
           </div>
-        {{else if details.articles.apiKeyLimitReached}}
+        {{else if details.services.apiKeyLimitReached}}
           <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
             You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
             you will be able to run searches again.</span>
@@ -2264,89 +2264,158 @@
         {{else}}
           <div class='mt-1'>
             <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the
-              "Retry Articles Search" button.</span>
+              "Retry services Search" button.</span>
           </div>
         {{/if}}
       </div>
     {{else}}
-      {{#if details.articles.length}}
-        <h1 class='p-title'>
-          {{fa-icon 'newspaper' fixedWidth=true}}
-          Article Indicator Details
-        </h1>
-        {{#each details.articles as |article index|}}
-          {{#if (gt index 0)}}
-            <hr />
-          {{/if}}
-          <div class='mb-2'>
-            <h1 class='p-title'>
-              {{article.title}}
-            </h1>
-            {{#if article.summary}}
+      {{#if details.services.servicesData}}
+        <div class='mb-2'>
+          <h1 class='p-title'>
+            {{fa-icon 'network-wired' fixedWidth=true}}
+            Service Details
+          </h1>
+
+          {{#each details.services.servicesData as |service index|}}
+            {{#if (gt index 0)}}
+              <hr />
+            {{/if}}
+            {{#if service.portNumber}}
               <div>
-                <span class='p-key'>Summary: </span>
-                <div class='summary'>
-                  <span class='p-value summary'>{{article.summary}}</span>
+                <span class='p-key'>Port Number: </span>
+                <span class='p-value'>{{service.portNumber}}</span>
+              </div>
+            {{/if}}
+            {{#if service.status}}
+              <div>
+                <span class='p-key'>Status: </span>
+                <span class='p-value'>{{service.status}}</span>
+              </div>
+            {{/if}}
+            {{#if service.protocol}}
+              <div>
+                <span class='p-key'>Protocol: </span>
+                <span class='p-value'>{{service.protocol}}</span>
+              </div>
+            {{/if}}
+
+            {{! Current Services}}
+            {{#if (get currentServiceStates index)}}
+              <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}>
+                <span class='text'><span class='desc'>Current Services:</span> {{UNIQUE_VALUE}}</span>
+                {{fa-icon 'angle-up'}}
+              </a>
+              {{#each service.currentServices as |currentService index|}}
+                <div class='current-service-information'>
+                  {{#if currentService.label}}
+                    <div>
+                      <span class='p-key'>Label: </span>
+                      <span class='p-value'>{{currentService.label}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if currentService.category}}
+                    <div>
+                      <span class='p-key'>Category: </span>
+                      <span class='p-value'>{{currentService.category}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if currentService.version}}
+                    <div>
+                      <span class='p-key'>Version: </span>
+                      <span class='p-value'>{{currentService.version}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if currentService.firstSeen}}
+                    <div>
+                      <span class='p-key'>First Seen: </span>
+                      <span class='p-value'>{{moment-format
+                          currentService.firstSeen
+                          'MM/DD/YYYY HH:mm:ss'
+                          timeZone=timezone
+                        }}</span>
+                    </div>
+                  {{/if}}
+                  {{#if currentService.lastSeen}}
+                    <div>
+                      <span class='p-key'>First Seen: </span>
+                      <span class='p-value'>{{moment-format
+                          currentService.lastSeen
+                          'MM/DD/YYYY HH:mm:ss'
+                          timeZone=timezone
+                        }}</span>
+                    </div>
+                  {{/if}}
                 </div>
-              </div>
+              {{/each}}
+            {{else}}
+              <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}>
+                <span class='text'>Current Services</span>
+                {{fa-icon 'angle-down'}}
+              </a>
             {{/if}}
-            {{#if article.type}}
-              <div>
-                <span class='p-key'>Type: </span>
-                <span class='p-value'>{{capitalize article.type}}</span>
-              </div>
-            {{/if}}
-            {{#if article.publishedDate}}
-              <div>
-                <span class='p-key'>Published Date: </span>
-                <span class='p-value'>{{moment-format
-                    article.publishedDate
-                    'MM/DD/YYYY HH:mm:ss'
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-            {{#if article.link}}
-              <div>
-                <span class='p-key'>Link: </span>
-                <span class='p-value'>
-                  <a href={{article.link}}>View Full Article
-                    {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-                </span>
-              </div>
-            {{/if}}
-            {{#if article.categories}}
-              <div>
-                <span class='p-key'>Categories: </span>
-                <span class='p-value'>{{article.categories}}</span>
-              </div>
-            {{/if}}
-            {{#if article.tags.length}}
-              <div>
-                <span class='p-key'>Tags: </span>
-                <div class='p-value'>
-                  {{#each article.tags as |tag|}}
-                    <span class='tag'>{{tag}}</span>
-                  {{/each}}
+
+            {{! Recent Services}}
+            {{#if (get recentServiceStates index)}}
+              <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}>
+                <span class='text'><span class='desc'>Recent Services:</span> {{UNIQUE_VALUE}}</span>
+                {{fa-icon 'angle-up'}}
+              </a>
+              {{#each service.recentServices as |recentService index|}}
+                <div class='recent-service-information'>
+                  {{#if recentService.label}}
+                    <div>
+                      <span class='p-key'>Label: </span>
+                      <span class='p-value'>{{recentService.label}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if recentService.category}}
+                    <div>
+                      <span class='p-key'>Category: </span>
+                      <span class='p-value'>{{recentService.category}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if recentService.version}}
+                    <div>
+                      <span class='p-key'>Version: </span>
+                      <span class='p-value'>{{recentService.version}}</span>
+                    </div>
+                  {{/if}}
+                  {{#if recentService.firstSeen}}
+                    <div>
+                      <span class='p-key'>First Seen: </span>
+                      <span class='p-value'>{{moment-format
+                          recentService.firstSeen
+                          'MM/DD/YYYY HH:mm:ss'
+                          timeZone=timezone
+                        }}</span>
+                    </div>
+                  {{/if}}
+                  {{#if recentService.lastSeen}}
+                    <div>
+                      <span class='p-key'>First Seen: </span>
+                      <span class='p-value'>{{moment-format
+                          recentService.lastSeen
+                          'MM/DD/YYYY HH:mm:ss'
+                          timeZone=timezone
+                        }}</span>
+                    </div>
+                  {{/if}}
                 </div>
-              </div>
+              {{/each}}
+            {{else}}
+              <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}>
+                <span class='text'>Recent Services</span>
+                {{fa-icon 'angle-down'}}
+              </a>
             {{/if}}
-          </div>
-        {{/each}}
-        <span class='p-footnote mt-2'>This tab only displays articles where the entity
-          <b>{{block.entity.value}}</b>
-          is listed as an indicator.</span>
+
+          {{/each}}
+        </div>
       {{else}}
         <div class='alert alert-info mt-2' role='alert'>
-          No Articles Found
-        </div>
-        <div>
-          <span class='p-footnote mt-2'>This tab only displays articles where the entity
-            <b>{{block.entity.value}}</b>
-            is listed as an indicator.</span>
+          No Service Details Found
         </div>
       {{/if}}
     {{/if}}
   {{/if}}
-
 {{/if}}

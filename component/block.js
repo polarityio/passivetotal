@@ -2,6 +2,8 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('details.summary'),
+  recentServiceStates: {},
+  currentServiceStates: {},
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -91,6 +93,20 @@ polarity.export = PolarityComponent.extend({
     },
     getQuota: function () {
       this.fetchQuota();
+    },
+    toggleExpandableRecentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('recentServiceStates'), {
+        [index]: !this.get('recentServiceStates')[index]
+      });
+
+      this.set(`recentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableCurrentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('currentServiceStates'), {
+        [index]: !this.get('currentServiceStates')[index]
+      });
+
+      this.set(`currentServiceStates`, modifiedExpandableTitleStates);
     }
   },
   runSearch(searchType) {
