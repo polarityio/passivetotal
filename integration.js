@@ -7,6 +7,7 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+const { on } = require('events');
 
 let Logger;
 let limiter = null;
@@ -295,7 +296,7 @@ function reachedSearchLimit(err, result) {
 
   return null;
 }
-
+const getBodyWithResults = getOr([], 'body.results');
 const getBody = getOr([], 'body');
 const getBodyWithResults = getOr([], 'body.results');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
@@ -443,6 +444,7 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
+
   switch (payload.searchType) {
     case 'whois':
       const qs = options.searchHistorical ? { query: entity.value, history: true } : { query: entity.value };
@@ -474,6 +476,30 @@ function onMessage(payload, options, cb) {
             //to avoid having to manage the different response shapes, we put the body of the response for single object in an array.
             onMessageResultHandler(err, whois, () => getBody({ body: { whoisData: [whois.body] } }), options, cb);
           }
+        }
+      );
+      break;
+    case 'osint':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/osint',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, osint) => {
+          Logger.trace({ osint }, 'osint Lookup');
+
+          onMessageResultHandler(
+            err,
+            osint,
+            () =>
+              getBodyWithResults({
+                body: { results: { osintData: osint.body.results } }
+              }),
+            options,
+            cb
+          );
         }
       );
       break;
