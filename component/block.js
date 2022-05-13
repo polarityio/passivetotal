@@ -25,6 +25,7 @@ polarity.export = PolarityComponent.extend({
         reputation: false,
         articles: false,
         quota: false,
+        osint: false,
         services: false
       });
 
@@ -37,6 +38,7 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
+        osint: false,
         services: false
       });
     }
@@ -123,7 +125,7 @@ polarity.export = PolarityComponent.extend({
 
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        console.log(result);
+        console.log('herherere', result, payload);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
