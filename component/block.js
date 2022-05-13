@@ -2,6 +2,8 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('details.summary'),
+  recentServiceStates: {},
+  currentServiceStates: {},
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -23,7 +25,7 @@ polarity.export = PolarityComponent.extend({
         reputation: false,
         articles: false,
         quota: false,
-        osint: false
+        services: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -35,7 +37,7 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        osint: false
+        services: false
       });
     }
   },
@@ -93,9 +95,19 @@ polarity.export = PolarityComponent.extend({
     getQuota: function () {
       this.fetchQuota();
     },
-    toggleShowResults: function (resultType) {
-      this.toggleProperty(resultType);
-      this.get('block').notifyPropertyChange('data');
+    toggleExpandableRecentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('recentServiceStates'), {
+        [index]: !this.get('recentServiceStates')[index]
+      });
+
+      this.set(`recentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableCurrentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('currentServiceStates'), {
+        [index]: !this.get('currentServiceStates')[index]
+      });
+
+      this.set(`currentServiceStates`, modifiedExpandableTitleStates);
     }
   },
   runSearch(searchType) {
@@ -111,6 +123,7 @@ polarity.export = PolarityComponent.extend({
 
     this.sendIntegrationMessage(payload)
       .then((result) => {
+        console.log(result);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);

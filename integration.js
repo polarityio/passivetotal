@@ -7,7 +7,7 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
-const { on } = require('events');
+
 
 let Logger;
 let limiter = null;
@@ -446,6 +446,32 @@ function onMessage(payload, options, cb) {
   const entity = payload.entity;
 
   switch (payload.searchType) {
+    case 'services':
+      doDetailsLookup(
+        {
+          path: '/v2/services',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, services) => {
+          Logger.trace({ services }, 'services Lookup');
+
+          onMessageResultHandler(
+            err,
+            services,
+            () =>
+              getBodyWithResults({
+                body: {
+                  results: { servicesData: services.body.results, totalRecords: services.body.totalRecords }
+                }
+              }),
+            options,
+            cb
+          );
+        }
+      );
+      break;
     case 'whois':
       const qs = options.searchHistorical ? { query: entity.value, history: true } : { query: entity.value };
       doDetailsLookup(
