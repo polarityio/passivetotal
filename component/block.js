@@ -76,6 +76,7 @@ polarity.export = PolarityComponent.extend({
   },
   actions: {
     changeTab: function (tabName) {
+      console.log(tabName);
       this.set('activeTab', tabName);
       // Only attempt to load data once when users click on a tab
       if (this.getInitialLoadAttempted(tabName) === false) {
@@ -117,6 +118,9 @@ polarity.export = PolarityComponent.extend({
       searchType: searchType,
       entity: this.get('block.entity')
     };
+
+    console.log(payload);
+
     this.sendIntegrationMessage(payload)
       .then((result) => {
         console.log(result);

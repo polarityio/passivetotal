@@ -7,7 +7,7 @@ const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
-const { Server } = require('http');
+
 
 let Logger;
 let limiter = null;
@@ -270,7 +270,8 @@ function doDetailsLookup(request, entity, options, cb) {
       cb(processedResult.error);
       return;
     }
-    //Logger.trace({ processedResult }, 'Looking at the Result');
+
+    Logger.trace({ processedResult }, 'Looking at the Result');
     cb(null, processedResult);
   });
 }
@@ -420,6 +421,7 @@ function _isEntityBlocklisted(entity, options) {
  */
 function onMessageResultHandler(err, data, getDataHandler, options, cb) {
   const searchLimitObject = reachedSearchLimit(err, data);
+
   if (searchLimitObject) {
     // The user hit a search limit so we're going to return their current API usage
     getQuota(options, (err, quota) => {
@@ -442,6 +444,7 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
+
   switch (payload.searchType) {
     case 'services':
       doDetailsLookup(
@@ -470,16 +473,59 @@ function onMessage(payload, options, cb) {
       );
       break;
     case 'whois':
+      const qs = options.searchHistorical ? { query: entity.value, history: true } : { query: entity.value };
       doDetailsLookup(
         {
           path: '/v2/whois',
-          qs: { query: entity.value }
+          qs
         },
         entity,
         options,
         (err, whois) => {
-          Logger.trace({ whois }, 'WHOIS Lookup');
-          onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
+          if (options.searchHistorical) {
+            const responseWithHistoricalData = whois.body.results.slice(0, 10);
+            Logger.trace(responseWithHistoricalData, 'responseWithHistoricalData');
+
+            onMessageResultHandler(
+              err,
+              whois,
+              () =>
+                getBodyWithResults({
+                  body: { results: { whoisData: responseWithHistoricalData, totalRecords: whois.body.totalRecords } }
+                }),
+              options,
+              cb
+            );
+          } else {
+            Logger.trace({ whois }, 'whois');
+            //When the request for whois data is made with history = true, the response is an array of objects, opposed to a single object,
+            //to avoid having to manage the different response shapes, we put the body of the response for single object in an array.
+            onMessageResultHandler(err, whois, () => getBody({ body: { whoisData: [whois.body] } }), options, cb);
+          }
+        }
+      );
+      break;
+    case 'osint':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/osint',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, osint) => {
+          Logger.trace({ osint }, 'osint Lookup');
+
+          onMessageResultHandler(
+            err,
+            osint,
+            () =>
+              getBodyWithResults({
+                body: { results: { osintData: osint.body.results } }
+              }),
+            options,
+            cb
+          );
         }
       );
       break;
