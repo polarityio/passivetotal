@@ -455,7 +455,6 @@ function onMessage(payload, options, cb) {
         options,
         (err, subdomains) => {
           Logger.trace({ subdomains }, 'subdomains Lookup');
-          subdomains.body.subdomains.push('asdasdasdas')
           onMessageResultHandler(err, subdomains, () => getBody(subdomains), options, cb);
         }
       );
