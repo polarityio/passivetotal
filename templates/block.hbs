@@ -299,6 +299,24 @@
           {{/if}}
         </a>
       </li>
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'subdomains'}}
+          class='nav-link {{if (or (eq activeTab "subdomains") (not activeTab)) "active"}}'
+          href='#'
+        >
+          Subdomains
+          {{#if block._state.searchRunning.subdomains}}{{fa-icon
+              'spinner-third'
+              fixedWidth=true
+              spin=true
+              class='loading-icon'
+            }}{{/if}}
+          {{#if details.subdomains.name}}
+            ({{if details.subdomains.name 'Found' 'Unknown'}})
+          {{/if}}
+        </a>
+      </li>
     </ul>
 
     {{#if (eq activeTab 'pairs')}}
@@ -2571,6 +2589,149 @@
     {{else}}
       <div class='alert alert-info mt-2' role='alert'>
         No Service Details Found
+      </div>
+    {{/if}}
+  {{/if}}
+{{/if}}
+
+{{#if (eq activeTab 'subdomains')}}
+  {{#if (and block._state.searchRunning.subdomains (not block._state.initialLoadAttempted.subdomains))}}
+    <div class='alert alert-info mt-2' role='alert'>
+      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+      Loading Resolution/subdomains
+    </div>
+  {{else if (or
+    details.subdomains.isConnectionReset
+    details.subdomains.maxRequestQueueLimitHit
+    details.subdomains.isGatewayTimeout
+    details.subdomains.apiKeyLimitReached
+    details.subdomains.onMessageTimeout
+  )}}
+    {{#unless details.subdomains.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'subdomains'}}>
+        {{#if block._state.searchRunning.subdomains}}
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        {{else}}
+          Retry subdomains Search
+        {{/if}}
+      </button>
+    {{/unless}}
+    <div class='mt-1'>
+      {{#if details.subdomains.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry subdomains
+          Search" button.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
+            run the search via the PassiveTotal website instead.</span>
+        </div>
+      {{else if details.subdomains.apiKeyLimitReached}}
+        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+          will be able to run searches again.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
+            quota.</span>
+        </div>
+        {{#if details.quota.user}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches:</span>
+              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                of
+                {{details.quota.user.licenseLimits.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration: </span>
+              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.user.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+        {{#if details.quota.organization}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                Your Organization Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches: </span>
+              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                of
+                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration:</span>
+              <span>{{details.quota.organization.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class='mt-1'>
+          <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
+            subdomains Search" button.</span>
+        </div>
+      {{/if}}
+    </div>
+  {{else}}
+    {{#if details.subdomains}}
+      <h1 class='p-title'>
+        {{fa-icon 'ethernet' fixedWidth=true}}
+        Subdomains
+      </h1>
+
+      <div>
+        <span class='p-key'>Primary Domain: </span>
+        <span class='p-value'>{{details.subdomains.primaryDomain}}</span>
+      </div>
+
+      <div>
+        <span class='p-key'>Query Value: </span>
+        <span class='p-value'>{{details.subdomains.queryValue}}</span>
+      </div>
+
+      <div class='subdomain-info'>
+        {{#each details.subdomains.subdomains as |subdomain index|}}
+          {{#if (get subdomainStates index)}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableSubdomains' index)}}>
+              <span class='text'><span class='desc'>Subdomains:</span> {{UNIQUE_VALUE}}</span>
+              {{fa-icon 'angle-up'}}
+            </a>
+            <div>
+              <span class='p-value'>{{subdomain}}</span>
+            </div>
+          {{else}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableSubdomains' index)}}>
+              <span class='text'>Subdomains</span>
+              {{fa-icon 'angle-down'}}
+            </a>
+          {{/if}}
+        {{/each}}
+      </div>
+    {{else}}
+      <div class='alert alert-info mt-2' role='alert'>
+        No Subdomains Found
       </div>
     {{/if}}
   {{/if}}

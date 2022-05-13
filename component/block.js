@@ -4,14 +4,18 @@ polarity.export = PolarityComponent.extend({
   summary: Ember.computed.alias('details.summary'),
   recentServiceStates: {},
   currentServiceStates: {},
+  subdomainStates: {},
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   activeTab: 'summary',
   errorMsg: '',
   runningRetrySearch: false,
+  subSubdomains: false,
   init() {
     this._super(...arguments);
+
+    this.set('showSubdomains', this.get('details.subdomains.subdomains'));
 
     if (!this.get('block._state')) {
       this.set('block._state', {});
@@ -25,6 +29,7 @@ polarity.export = PolarityComponent.extend({
         reputation: false,
         articles: false,
         quota: false,
+        subdomains: false,
         osint: false,
         services: false
       });
@@ -38,6 +43,7 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
+        subdomains: false,
         osint: false,
         services: false
       });
@@ -110,6 +116,13 @@ polarity.export = PolarityComponent.extend({
       });
 
       this.set(`currentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableSubdomains: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('subdomainStates'), {
+        [index]: !this.get('subdomainStates')[index]
+      });
+
+      this.set(`subdomainStates`, modifiedExpandableTitleStates);
     }
   },
   runSearch(searchType) {
