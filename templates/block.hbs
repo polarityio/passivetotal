@@ -200,8 +200,26 @@
               spin=true
               class='loading-icon'
             }}{{/if}}
-          {{#if details.whois.name}}
-            ({{if details.whois.name 'Found' 'Unknown'}})
+          {{#if details.whois.totalRecords}}
+            ({{if details.whois.totalRecords details.whois.totalRecords '(1)'}})
+          {{/if}}
+        </a>
+      </li>
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'osint'}}
+          class='nav-link {{if (or (eq activeTab "osint") (not activeTab)) "active"}}'
+          href='#'
+        >
+          OSINT
+          {{#if block._state.searchRunning.malware}}{{fa-icon
+              'spinner-third'
+              fixedWisdth=true
+              spin=true
+              class='loading-icon'
+            }}{{/if}}
+          {{#if details.osint.osintData.length}}
+            ({{details.osint.osintData.length}})
           {{/if}}
         </a>
       </li>
@@ -260,6 +278,24 @@
             }}{{/if}}
           {{#if malwareIsLoaded}}
             ({{details.malware.length}})
+          {{/if}}
+        </a>
+      </li>
+      <li class='nav-item'>
+        <a
+          {{action 'changeTab' 'services'}}
+          class='nav-link {{if (or (eq activeTab "services") (not activeTab)) "active"}}'
+          href='#'
+        >
+          Services
+          {{#if block._state.searchRunning.services}}{{fa-icon
+              'spinner-third'
+              fixedWisdth=true
+              spin=true
+              class='loading-icon'
+            }}{{/if}}
+          {{#if details.services.servicesData}}
+            ({{details.services.servicesData.length}})
           {{/if}}
         </a>
       </li>
@@ -716,300 +752,304 @@
           {{/if}}
         </div>
       {{else}}
-        {{#if details.whois.name}}
-          <h1 class='p-title'>
-            {{fa-icon 'search' fixedWidth=true}}
-            WHOIS Details
-          </h1>
-          <div class='mb-2'>
-            {{#if details.whois.whoisServer}}
-              <div>
-                <span class='p-key'>WHOIS Server: </span>
-                <span class='p-value'>{{details.whois.whoisServer}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.domain}}
-              <div>
-                <span class='p-key'>Domain: </span>
-                <span class='p-value'>{{details.whois.domain}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.domainStatus}}
-              <div>
-                <span class='p-key'>Domain Status: </span>
-                <span class='p-value'>{{details.whois.domainStatus}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.name}}
-              <div>
-                <span class='p-key'>Name: </span>
-                <span class='p-value'>{{details.whois.name}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.organization}}
-              <div>
-                <span class='p-key'>Organization: </span>
-                <span class='p-value'>{{details.whois.organization}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.telephone}}
-              <div>
-                <span class='p-key'>Telephone: </span>
-                <span class='p-value'>{{details.whois.telephone}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.contactEmail}}
-              <div>
-                <span class='p-key'>Contact Email: </span>
-                <span class='p-value'>{{details.whois.contactEmail}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.nameServers.length}}
-              <div>
-                <span class='p-key'>Name Servers: </span>
-                <div class='p-value'>
-                  {{#each details.whois.nameServers as |nameServer|}}
-                    <span class='tag'>{{nameServer}}</span>
-                  {{/each}}
-                </div>
-              </div>
-            {{/if}}
-            {{#if details.whois.registrar}}
-              <div>
-                <span class='p-key'>Registrar: </span>
-                <span class='p-value'>{{details.whois.registrar}}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.expiresAt}}
-              <div>
-                <span class='p-key'>Expires At: </span>
-                <span class='p-value'>{{moment-format
-                    details.whois.expiresAt
-                    'MM/DD/YYYY HH:mm:ss'
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.lastLoadedAt}}
-              <div>
-                <span class='p-key'>Last Loaded At: </span>
-                <span class='p-value'>{{moment-format
-                    details.whois.lastLoadedAt
-                    'MM/DD/YYYY HH:mm:ss'
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.registered}}
-              <div>
-                <span class='p-key'>Registered: </span>
-                <span class='p-value'>{{moment-format
-                    details.whois.registered
-                    'MM/DD/YYYY HH:mm:ss'
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-            {{#if details.whois.registryUpdatedAt}}
-              <div>
-                <span class='p-key'>Registry Updated At: </span>
-                <span class='p-value'>{{moment-format
-                    details.whois.registryUpdatedAt
-                    'MM/DD/YYYY HH:mm:ss'
-                    timeZone=timezone
-                  }}</span>
-              </div>
-            {{/if}}
-          </div>
 
-          {{#if hasWhoisAdmin}}
+        {{#if details.whois}}
+          {{#each details.whois.whoisData as |detail|}}
+            <hr />
             <h1 class='p-title'>
-              {{fa-icon icon='user-cog' fixedWidth=true}}
-              Admin
+              {{fa-icon 'search' fixedWidth=true}}
+              <strong>WHOIS Details</strong>
             </h1>
             <div class='mb-2'>
-              {{#if details.whois.admin.name}}
+              {{#if detail.whoisServer}}
+                <div>
+                  <span class='p-key'>WHOIS Server: </span>
+                  <span class='p-value'>{{details.whois.whoisServer}}</span>
+                </div>
+              {{/if}}
+              {{#if detail.domain}}
+                <div>
+                  <span class='p-key'>Domain: </span>
+                  <span class='p-value'>{{detail.domain}}</span>
+                </div>
+              {{/if}}
+              {{#if detail.domainStatus}}
+                <div>
+                  <span class='p-key'>Domain Status: </span>
+                  <span class='p-value'>{{detail.domainStatus}}</span>
+                </div>
+              {{/if}}
+              {{#if detail.name}}
                 <div>
                   <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{details.whois.admin.name}}</span>
+                  <span class='p-value'>{{detail.name}}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.organization}}
+              {{#if detail.organization}}
                 <div>
                   <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{details.whois.admin.organization}}</span>
+                  <span class='p-value'>{{detail.organization}}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{details.whois.admin.email}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.admin.telephone}}
+              {{#if detail.telephone}}
                 <div>
                   <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{details.whois.admin.telephone}}</span>
+                  <span class='p-value'>{{detail.telephone}}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.street}}
+              {{#if detail.contactEmail}}
                 <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{details.whois.admin.street}}</span>
+                  <span class='p-key'>Contact Email: </span>
+                  <span class='p-value'>{{detail.contactEmail}}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.postalCode}}
+              {{#if detail.nameServers.length}}
                 <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{details.whois.admin.postalCode}}</span>
+                  <span class='p-key'>Name Servers: </span>
+                  <div class='p-value'>
+                    {{#each detail.nameServers as |nameServer|}}
+                      <span class='tag'>{{nameServer}}</span>
+                    {{/each}}
+                  </div>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.city}}
+              {{#if detail.registrar}}
                 <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{details.whois.admin.city}}</span>
+                  <span class='p-key'>Registrar: </span>
+                  <span class='p-value'>{{detail.registrar}}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.state}}
+              {{#if detail.expiresAt}}
                 <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{details.whois.admin.state}}</span>
+                  <span class='p-key'>Expires At: </span>
+                  <span class='p-value'>{{moment-format
+                      detail.expiresAt
+                      'MM/DD/YYYY HH:mm:ss'
+                      timeZone=timezone
+                    }}</span>
                 </div>
               {{/if}}
-              {{#if details.whois.admin.country}}
+              {{#if detail.lastLoadedAt}}
                 <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{details.whois.admin.country}}</span>
+                  <span class='p-key'>Last Loaded At: </span>
+                  <span class='p-value'>{{moment-format
+                      detail.lastLoadedAt
+                      'MM/DD/YYYY HH:mm:ss'
+                      timeZone=timezone
+                    }}</span>
+                </div>
+              {{/if}}
+              {{#if detail.registered}}
+                <div>
+                  <span class='p-key'>Registered: </span>
+                  <span class='p-value'>{{moment-format
+                      detail.registered
+                      'MM/DD/YYYY HH:mm:ss'
+                      timeZone=timezone
+                    }}</span>
+                </div>
+              {{/if}}
+              {{#if detail.registryUpdatedAt}}
+                <div>
+                  <span class='p-key'>Registry Updated At: </span>
+                  <span class='p-value'>{{moment-format
+                      detail.registryUpdatedAt
+                      'MM/DD/YYYY HH:mm:ss'
+                      timeZone=timezone
+                    }}</span>
                 </div>
               {{/if}}
             </div>
-          {{/if}}
 
-          {{#if hasWhoisRegistrant}}
-            <h1 class='p-title'>
-              {{fa-icon icon='user-tie' fixedWidth=true}}
-              Registrant
-            </h1>
-            <div class='mb-2'>
-              {{#if details.whois.registrant.name}}
-                <div>
-                  <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{details.whois.registrant.name}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.organization}}
-                <div>
-                  <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{details.whois.registrant.organization}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{details.whois.registrant.email}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.telephone}}
-                <div>
-                  <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{details.whois.registrant.telephone}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.street}}
-                <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{details.whois.registrant.street}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.postalCode}}
-                <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{details.whois.registrant.postalCode}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.city}}
-                <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{details.whois.registrant.city}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.state}}
-                <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{details.whois.registrant.state}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.registrant.country}}
-                <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{details.whois.registrant.country}}</span>
-                </div>
-              {{/if}}
-            </div>
-          {{/if}}
+            {{#if detail.admin.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-cog' fixedWidth=true}}
+                Admin
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.admin.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.admin.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.admin.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.admin.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.admin.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.admin.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.admin.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.admin.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.admin.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.admin.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.admin.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
 
-          {{#if hasWhoisTech}}
-            <h1 class='p-title'>
-              {{fa-icon icon='user-visor' fixedWidth=true}}
-              Tech
-            </h1>
-            <div class='mb-2'>
-              {{#if details.whois.tech.name}}
-                <div>
-                  <span class='p-key'>Name: </span>
-                  <span class='p-value'>{{details.whois.tech.name}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.organization}}
-                <div>
-                  <span class='p-key'>Organization: </span>
-                  <span class='p-value'>{{details.whois.tech.organization}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.email}}
-                <div>
-                  <span class='p-key'>Email: </span>
-                  <span class='p-value'>{{details.whois.tech.email}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.telephone}}
-                <div>
-                  <span class='p-key'>Telephone: </span>
-                  <span class='p-value'>{{details.whois.tech.telephone}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.street}}
-                <div>
-                  <span class='p-key'>Street: </span>
-                  <span class='p-value'>{{details.whois.tech.street}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.postalCode}}
-                <div>
-                  <span class='p-key'>Postal Code: </span>
-                  <span class='p-value'>{{details.whois.tech.postalCode}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.city}}
-                <div>
-                  <span class='p-key'>City: </span>
-                  <span class='p-value'>{{details.whois.tech.city}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.state}}
-                <div>
-                  <span class='p-key'>State: </span>
-                  <span class='p-value'>{{details.whois.tech.state}}</span>
-                </div>
-              {{/if}}
-              {{#if details.whois.tech.country}}
-                <div>
-                  <span class='p-key'>Country: </span>
-                  <span class='p-value'>{{details.whois.tech.country}}</span>
-                </div>
-              {{/if}}
-            </div>
-          {{/if}}
+            {{#if detail.registrant.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-tie' fixedWidth=true}}
+                Registrant
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.registrant.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.registrant.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.registrant.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.registrant.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.registrant.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.registrant.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.registrant.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.registrant.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.registrant.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.registrant.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.registrant.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
+
+            {{#if detail.tech.name}}
+              <h1 class='p-title'>
+                {{fa-icon icon='user-visor' fixedWidth=true}}
+                Tech
+              </h1>
+              <div class='mb-2'>
+                {{#if detail.tech.name}}
+                  <div>
+                    <span class='p-key'>Name: </span>
+                    <span class='p-value'>{{detail.tech.name}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.organization}}
+                  <div>
+                    <span class='p-key'>Organization: </span>
+                    <span class='p-value'>{{detail.tech.organization}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.email}}
+                  <div>
+                    <span class='p-key'>Email: </span>
+                    <span class='p-value'>{{detail.tech.email}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.telephone}}
+                  <div>
+                    <span class='p-key'>Telephone: </span>
+                    <span class='p-value'>{{detail.tech.telephone}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.street}}
+                  <div>
+                    <span class='p-key'>Street: </span>
+                    <span class='p-value'>{{detail.tech.street}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.postalCode}}
+                  <div>
+                    <span class='p-key'>Postal Code: </span>
+                    <span class='p-value'>{{detail.tech.postalCode}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.city}}
+                  <div>
+                    <span class='p-key'>City: </span>
+                    <span class='p-value'>{{detail.tech.city}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.state}}
+                  <div>
+                    <span class='p-key'>State: </span>
+                    <span class='p-value'>{{detail.tech.state}}</span>
+                  </div>
+                {{/if}}
+                {{#if detail.tech.country}}
+                  <div>
+                    <span class='p-key'>Country: </span>
+                    <span class='p-value'>{{detail.tech.country}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
+          {{/each}}
         {{else}}
           <div class='alert alert-info mt-2' role='alert'>
             No WHOIS Details Found
@@ -1833,261 +1873,148 @@
         {{/if}}
       {{/if}}
     {{/if}}
+  {{/if}}
 
-    {{#if (eq activeTab 'summary')}}
-      <h1 class='p-title'>
-        {{fa-icon 'id-card' fixedWidth=true}}
-        Summary Card Details
-      </h1>
+  {{#if (eq activeTab 'summary')}}
+    <h1 class='p-title'>
+      {{fa-icon 'id-card' fixedWidth=true}}
+      Summary Card Details
+    </h1>
 
-      {{#if summary.name}}
+    {{#if summary.name}}
+      <div>
+        <span class='p-key'>Name: </span>
+        <span class='p-value'><a href='{{summary.link}}'>{{summary.name}}
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+      </div>
+    {{/if}}
+    {{#if summary.type}}
+      <div>
+        <span class='p-key'>Type: </span>
+        <span class='p-value'>{{summary.type}}</span>
+      </div>
+    {{/if}}
+    {{#if summary.netblock}}
+      {{#if (not-eq summary.netblock 'n/a')}}
         <div>
-          <span class='p-key'>Name: </span>
-          <span class='p-value'><a href='{{summary.link}}'>{{summary.name}}
+          <span class='p-key'>Netblock: </span>
+          <span class='p-value'>{{summary.netblock}}</span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.os}}
+      {{#if (not-eq summary.os 'n/a')}}
+        <div>
+          <span class='p-key'>OS: </span>
+          <span class='p-value'>{{summary.os}}</span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.asn}}
+      {{#if (not-eq summary.asn 'n/a')}}
+        <div>
+          <span class='p-key'>ASN: </span>
+          <span class='p-value'>{{summary.asn}}</span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.hosting_provider}}
+      {{#if (not-eq summary.hosting_provider 'n/a')}}
+        <div>
+          <span class='p-key'>Hosting Provider: </span>
+          <span class='p-value'>{{summary.hosting_provider}}</span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.resolutions}}
+      {{#if (gt summary.data_summary.resolutions.count 0)}}
+        <div>
+          <span class='p-key'>Resolutions: </span>
+          <span class='p-value'><a
+              href='{{summary.data_summary.resolutions.link}}'
+            >{{summary.data_summary.resolutions.count}}
               {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
         </div>
       {{/if}}
-      {{#if summary.type}}
-        <div>
-          <span class='p-key'>Type: </span>
-          <span class='p-value'>{{summary.type}}</span>
-        </div>
-      {{/if}}
-      {{#if summary.netblock}}
-        {{#if (not-eq summary.netblock 'n/a')}}
-          <div>
-            <span class='p-key'>Netblock: </span>
-            <span class='p-value'>{{summary.netblock}}</span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.os}}
-        {{#if (not-eq summary.os 'n/a')}}
-          <div>
-            <span class='p-key'>OS: </span>
-            <span class='p-value'>{{summary.os}}</span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.asn}}
-        {{#if (not-eq summary.asn 'n/a')}}
-          <div>
-            <span class='p-key'>ASN: </span>
-            <span class='p-value'>{{summary.asn}}</span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.hosting_provider}}
-        {{#if (not-eq summary.hosting_provider 'n/a')}}
-          <div>
-            <span class='p-key'>Hosting Provider: </span>
-            <span class='p-value'>{{summary.hosting_provider}}</span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.resolutions}}
-        {{#if (gt summary.data_summary.resolutions.count 0)}}
-          <div>
-            <span class='p-key'>Resolutions: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.resolutions.link}}'
-              >{{summary.data_summary.resolutions.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.certificates}}
-        {{#if (gt summary.data_summary.certificates.count 0)}}
-          <div>
-            <span class='p-key'>Certificates: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.certificates.link}}'
-              >{{summary.data_summary.certificates.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.hashes}}
-        {{#if (gt summary.data_summary.hashes.count 0)}}
-          <div>
-            <span class='p-key'>Hashes: </span>
-            <span class='p-value'><a href='{{summary.data_summary.hashes.link}}'>{{summary.data_summary.hashes.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.projects}}
-        {{#if (gt summary.data_summary.projects.count 0)}}
-          <div>
-            <span class='p-key'>Projects: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.projects.link}}'
-              >{{summary.data_summary.projects.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.articles}}
-        {{#if (gt summary.data_summary.articles.count 0)}}
-          <div>
-            <span class='p-key'>Articles: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.articles.link}}'
-              >{{summary.data_summary.articles.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.trackers}}
-        {{#if (gt summary.data_summary.trackers.count 0)}}
-          <div>
-            <span class='p-key'>Trackers: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.trackers.link}}'
-              >{{summary.data_summary.trackers.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.components}}
-        {{#if (gt summary.data_summary.components.count 0)}}
-          <div>
-            <span class='p-key'>Components: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.components.link}}'
-              >{{summary.data_summary.components.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.host_pairs}}
-        {{#if (gt summary.data_summary.host_pairs.count 0)}}
-          <div>
-            <span class='p-key'>Host Pairs: </span>
-            <span class='p-value'><a
-                href='{{summary.data_summary.host_pairs.link}}'
-              >{{summary.data_summary.host_pairs.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{#if summary.data_summary.cookies}}
-        {{#if (gt summary.data_summary.cookies.count 0)}}
-          <div>
-            <span class='p-key'>Cookies: </span>
-            <span class='p-value'><a href='{{summary.data_summary.cookies.link}}'>{{summary.data_summary.cookies.count}}
-                {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-          </div>
-        {{/if}}
-      {{/if}}
-      {{! view quota }}
-      <div class='mt-1'>
-        <span class='p-action' {{action 'showQuota'}}>
-          {{#if block._state.viewQuota}}
-            Hide Search Quota
-            {{fa-icon icon='chevron-up'}}
-          {{else}}
-            View Search Quota
-            {{fa-icon icon='chevron-down'}}
-          {{/if}}
-        </span>
-        {{#if block._state.searchRunning.quota}}
-          <div class='mt-1'>
-            {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-            Loading Quota ...
-          </div>
-        {{/if}}
-        {{#if block._state.viewQuota}}
-          {{#if details.quota}}
-            <div class='quota-container mt-1'>
-              {{#if details.quota.user}}
-                <div>
-                  <div>
-                    <span class='p-title mt-0'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>API Searches:</span>
-                    <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
-                      of
-                      {{details.quota.user.licenseLimits.searchApi}}
-                      used</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>Quota Duration: </span>
-                    <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>Next Quota Reset: </span>
-                    <span class='p-value'>{{details.quota.user.next_reset}}</span>
-                  </div>
-                </div>
-              {{/if}}
-              {{#if details.quota.organization}}
-                <div class='mt-1'>
-                  <div>
-                    <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
-                      Your Organization Search Quota</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>API Searches: </span>
-                    <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
-                      of
-                      {{details.quota.organization.licenseLimits.enterprise.searchApi}}
-                      used</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>Quota Duration:</span>
-                    <span>{{details.quota.organization.quotaInterval}}</span>
-                  </div>
-                  <div>
-                    <span class='p-key'>Next Quota Reset: </span>
-                    <span class='p-value'>{{details.quota.organization.next_reset}}</span>
-                  </div>
-                </div>
-              {{/if}}
-              <span class='reload-quota-btn' {{action 'getQuota'}}>
-                {{fa-icon
-                  icon='sync'
-                  fixedWidth=true
-                  class='icon'
-                  title='Refresh Quota'
-                  spin=(if block._state.searchRunning.quota true false)
-                }}
-              </span>
-            </div>
-          {{/if}}
-        {{/if}}
-      </div>
     {{/if}}
-  {{/if}}
-
-  {{#if (eq block.entity.type 'custom')}}
-    {{! Tracker output parsing}}
-    <div class='view-in-pt'>
-      <a href='https://community.riskiq.com/search/trackers/{{block.entity.value}}'>View in PassiveTotal
-        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-    </div>
-    <h1 class='p-title'>
-      {{fa-icon 'code' fixedWidth=true}}
-      Google Analytics Tracker Details
-    </h1>
-    {{#each details.tracker as |result index|}}
-      <div class='mb-2'>
+    {{#if summary.data_summary.certificates}}
+      {{#if (gt summary.data_summary.certificates.count 0)}}
         <div>
-          <span class='p-key'>Entity: </span>
-          <a href='https://community.riskiq.com/search/{{result.entity}}'>{{result.entity}}
-            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+          <span class='p-key'>Certificates: </span>
+          <span class='p-value'><a
+              href='{{summary.data_summary.certificates.link}}'
+            >{{summary.data_summary.certificates.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
         </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.hashes}}
+      {{#if (gt summary.data_summary.hashes.count 0)}}
         <div>
-          <span class='p-key'>First Seen: </span>
-          <span class='p-value'>{{result.firstSeen}}</span>
+          <span class='p-key'>Hashes: </span>
+          <span class='p-value'><a href='{{summary.data_summary.hashes.link}}'>{{summary.data_summary.hashes.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
         </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.projects}}
+      {{#if (gt summary.data_summary.projects.count 0)}}
         <div>
-          <span class='p-key'>Last Seen: </span>
-          <span class='p-value'>{{result.lastSeen}}</span>
+          <span class='p-key'>Projects: </span>
+          <span class='p-value'><a href='{{summary.data_summary.projects.link}}'>{{summary.data_summary.projects.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
         </div>
-      </div>
-    {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.articles}}
+      {{#if (gt summary.data_summary.articles.count 0)}}
+        <div>
+          <span class='p-key'>Articles: </span>
+          <span class='p-value'><a href='{{summary.data_summary.articles.link}}'>{{summary.data_summary.articles.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.trackers}}
+      {{#if (gt summary.data_summary.trackers.count 0)}}
+        <div>
+          <span class='p-key'>Trackers: </span>
+          <span class='p-value'><a href='{{summary.data_summary.trackers.link}}'>{{summary.data_summary.trackers.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.components}}
+      {{#if (gt summary.data_summary.components.count 0)}}
+        <div>
+          <span class='p-key'>Components: </span>
+          <span class='p-value'><a
+              href='{{summary.data_summary.components.link}}'
+            >{{summary.data_summary.components.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.host_pairs}}
+      {{#if (gt summary.data_summary.host_pairs.count 0)}}
+        <div>
+          <span class='p-key'>Host Pairs: </span>
+          <span class='p-value'><a
+              href='{{summary.data_summary.host_pairs.link}}'
+            >{{summary.data_summary.host_pairs.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+        </div>
+      {{/if}}
+    {{/if}}
+    {{#if summary.data_summary.cookies}}
+      {{#if (gt summary.data_summary.cookies.count 0)}}
+        <div>
+          <span class='p-key'>Cookies: </span>
+          <span class='p-value'><a href='{{summary.data_summary.cookies.link}}'>{{summary.data_summary.cookies.count}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+        </div>
+      {{/if}}
+    {{/if}}
     {{! view quota }}
     <div class='mt-1'>
       <span class='p-action' {{action 'showQuota'}}>
@@ -2167,59 +2094,59 @@
       {{/if}}
     </div>
   {{/if}}
+{{/if}}
 
-  {{#if (eq activeTab 'subdomains')}}
-    {{#if (and block._state.searchRunning.subdomains (not block._state.initialLoadAttempted.subdomains))}}
-      <div class='alert alert-info mt-2' role='alert'>
-        {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-        Loading Resolution/subdomains
+{{#if (eq block.entity.type 'custom')}}
+  {{! Tracker output parsing}}
+  <div class='view-in-pt'>
+    <a href='https://community.riskiq.com/search/trackers/{{block.entity.value}}'>View in PassiveTotal
+      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+  </div>
+  <h1 class='p-title'>
+    {{fa-icon 'code' fixedWidth=true}}
+    Google Analytics Tracker Details
+  </h1>
+  {{#each details.tracker as |result index|}}
+    <div class='mb-2'>
+      <div>
+        <span class='p-key'>Entity: </span>
+        <a href='https://community.riskiq.com/search/{{result.entity}}'>{{result.entity}}
+          {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
       </div>
-    {{else if (or
-      details.subdomains.isConnectionReset
-      details.subdomains.maxRequestQueueLimitHit
-      details.subdomains.isGatewayTimeout
-      details.subdomains.apiKeyLimitReached
-      details.subdomains.onMessageTimeout
-    )}}
-      {{#unless details.subdomains.apiKeyLimitReached}}
-        <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'subdomains'}}>
-          {{#if block._state.searchRunning.subdomains}}
-            {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-          {{else}}
-            Retry subdomains Search
-          {{/if}}
-        </button>
-      {{/unless}}
+      <div>
+        <span class='p-key'>First Seen: </span>
+        <span class='p-value'>{{result.firstSeen}}</span>
+      </div>
+      <div>
+        <span class='p-key'>Last Seen: </span>
+        <span class='p-value'>{{result.lastSeen}}</span>
+      </div>
+    </div>
+  {{/each}}
+  {{! view quota }}
+  <div class='mt-1'>
+    <span class='p-action' {{action 'showQuota'}}>
+      {{#if block._state.viewQuota}}
+        Hide Search Quota
+        {{fa-icon icon='chevron-up'}}
+      {{else}}
+        View Search Quota
+        {{fa-icon icon='chevron-down'}}
+      {{/if}}
+    </span>
+    {{#if block._state.searchRunning.quota}}
       <div class='mt-1'>
-        {{#if details.subdomains.onMessageTimeout}}
-          <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry
-            subdomains Search" button.</span>
-          <div class='mt-1'>
-            <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-              PassiveTotal Web Interface
-              {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-          </div>
-          <div>
-            <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
-              run the search via the PassiveTotal website instead.</span>
-          </div>
-        {{else if details.subdomains.apiKeyLimitReached}}
-          <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
-            You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
-            you will be able to run searches again.</span>
-          <div class='mt-1'>
-            <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-              PassiveTotal Web Interface
-              {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-          </div>
-          <div>
-            <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
-              quota.</span>
-          </div>
+        {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        Loading Quota ...
+      </div>
+    {{/if}}
+    {{#if block._state.viewQuota}}
+      {{#if details.quota}}
+        <div class='quota-container mt-1'>
           {{#if details.quota.user}}
-            <div class='mt-1'>
+            <div>
               <div>
-                <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+                <span class='p-title mt-0'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
               </div>
               <div>
                 <span class='p-key'>API Searches:</span>
@@ -2261,59 +2188,551 @@
               </div>
             </div>
           {{/if}}
-        {{else}}
-          <div class='mt-1'>
-            <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the
-              "Retry subdomains Search" button.</span>
-          </div>
-        {{/if}}
-      </div>
-    {{else}}
-      {{#if details.subdomains}}
-        <h1 class='p-title'>
-          {{fa-icon 'ethernet' fixedWidth=true}}
-          Subdomains
-        </h1>
-
-        <div>
-          <span class='p-key'>Primary Domain: </span>
-          <span class='p-value'>{{details.subdomains.primaryDomain}}</span>
-        </div>
-
-        <div>
-          <span class='p-key'>Query Value: </span>
-          <span class='p-value'>{{details.subdomains.queryValue}}</span>
-        </div>
-
-        <div class='subdomain-info'>
-          <div class='toggle-header'>
-            <span class='p-action' {{action 'toggleShowResults' 'showSubdomains'}}>
-              {{fa-icon 'laptop' fixedWidth=true}}
-              Subdomains
-              {{fa-icon (if showSubdomains 'caret-up' 'caret-down') fixedWidth=true}}
-            </span>
-          </div>
-
-          {{#if showSubdomains}}
-            {{#if (not details.subdomains.subdomains.length)}}
-              <div class='alert alert-info mt-2' role='alert'>
-                No Subdomains Found
-              </div>
-            {{/if}}
-          {{else}}
-            {{#each details.subdomains.subdomains as |subdomain|}}
-              <div>
-                <span class='p-value'>{{subdomain}}</span>
-              </div>
-            {{/each}}
-          {{/if}}
-        </div>
-
-      {{else}}
-        <div class='alert alert-info mt-2' role='alert'>
-          No Resolutions/PDNS Details Found
+          <span class='reload-quota-btn' {{action 'getQuota'}}>
+            {{fa-icon
+              icon='sync'
+              fixedWidth=true
+              class='icon'
+              title='Refresh Quota'
+              spin=(if block._state.searchRunning.quota true false)
+            }}
+          </span>
         </div>
       {{/if}}
+    {{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq activeTab 'osint')}}
+  {{#if (and block._state.searchRunning.osint.osintData (not block._state.initialLoadAttempted.osint.osintData))}}
+    <div class='alert alert-info mt-2' role='alert'>
+      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+      Loading OSINT
+    </div>
+  {{else if (or
+    details.osint.isConnectionReset
+    details.osint.maxRequestQueueLimitHit
+    details.osint.isGatewayTimeout
+    details.osint.apiKeyLimitReached
+    details.osint.onMessageTimeout
+  )}}
+    {{#unless details.osint.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'osint'}}>
+        {{#if block._state.searchRunning.osint}}
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        {{else}}
+          Retry osint.osintData Search
+        {{/if}}
+      </button>
+    {{/unless}}
+    <div class='mt-1'>
+      {{#if details.osint.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry OSINT
+          Search" button.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
+            run the search via the PassiveTotal website instead.</span>
+        </div>
+      {{else if details.osint.apiKeyLimitReached}}
+        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+          will be able to run searches again.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
+            quota.</span>
+        </div>
+        {{#if details.quota.user}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches:</span>
+              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                of
+                {{details.quota.user.licenseLimits.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration: </span>
+              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.user.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+        {{#if details.quota.organization}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                Your Organization Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches: </span>
+              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                of
+                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration:</span>
+              <span>{{details.quota.organization.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class='mt-1'>
+          <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
+            OSINT Search" button.</span>
+        </div>
+      {{/if}}
+    </div>
+  {{else}}
+    {{#if details.osint.osintData}}
+      <div class='osint-container'>
+        <h1 class='p-title'>
+          {{fa-icon 'search' fixedWidth=true}}
+          OSINT Details
+        </h1>
+        {{#each details.osint.osintData as |info|}}
+          <div class='mb-3'>
+            {{#if info.source}}
+              <div>
+                <span class='p-key'>Source: </span>
+                <span class='p-value'>{{info.source}}</span>
+              </div>
+            {{/if}}
+            {{#if info.sourceUrl}}
+              <div>
+                <span class='p-key'>Source URL: </span>
+                <span class='p-value'>{{info.sourceUrl}}</span>
+              </div>
+            {{/if}}
+            {{#if info.tags.length}}
+              <div>
+                <span class='p-key'>Tags: </span>
+                {{#each info.tags as |tag|}}
+                  <div class='tag-value'>
+                    <span class='tag'>{{tag}}</span>
+                  </div>
+                {{/each}}
+              </div>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class='alert alert-info mt-2' role='alert'>
+        No OSINT Details Found
+      </div>
+    {{/if}}
+  {{/if}}
+{{/if}}
+
+{{#if (eq activeTab 'services')}}
+  {{#if (and block._state.searchRunning.services (not block._state.initialLoadAttempted.services))}}
+    <div class='alert alert-info mt-2' role='alert'>
+      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+      Loading Services
+    </div>
+  {{else if (or
+    details.services.isConnectionReset
+    details.services.maxRequestQueueLimitHit
+    details.services.isGatewayTimeout
+    details.services.apiKeyLimitReached
+  )}}
+    {{#unless details.services.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'services'}}>
+        {{#if block._state.searchRunning.services}}
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        {{else}}
+          Retry Services Search
+        {{/if}}
+      </button>
+    {{/unless}}
+    <div class='mt-1'>
+      {{#if details.services.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry services
+          Search" button.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
+            run the search via the PassiveTotal website instead.</span>
+        </div>
+      {{else if details.services.apiKeyLimitReached}}
+        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+          will be able to run searches again.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
+            quota.</span>
+        </div>
+        {{#if details.quota.user}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches:</span>
+              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                of
+                {{details.quota.user.licenseLimits.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration: </span>
+              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.user.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+        {{#if details.quota.organization}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                Your Organization Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches: </span>
+              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                of
+                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration:</span>
+              <span>{{details.quota.organization.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class='mt-1'>
+          <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
+            services Search" button.</span>
+        </div>
+      {{/if}}
+    </div>
+  {{else}}
+    {{#if details.services.servicesData}}
+      <div class='mb-2'>
+        <h1 class='p-title'>
+          {{fa-icon 'network-wired' fixedWidth=true}}
+          Service Details
+        </h1>
+
+        {{#each details.services.servicesData as |service index|}}
+          {{#if (gt index 0)}}
+            <hr />
+          {{/if}}
+          {{#if service.portNumber}}
+            <div>
+              <span class='p-key'>Port Number: </span>
+              <span class='p-value'>{{service.portNumber}}</span>
+            </div>
+          {{/if}}
+          {{#if service.status}}
+            <div>
+              <span class='p-key'>Status: </span>
+              <span class='p-value'>{{service.status}}</span>
+            </div>
+          {{/if}}
+          {{#if service.protocol}}
+            <div>
+              <span class='p-key'>Protocol: </span>
+              <span class='p-value'>{{service.protocol}}</span>
+            </div>
+          {{/if}}
+
+          {{! Current Services}}
+          {{#if (get currentServiceStates index)}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}>
+              <span class='text'><span class='desc'>Current Services:</span> {{UNIQUE_VALUE}}</span>
+              {{fa-icon 'angle-up'}}
+            </a>
+            {{#each service.currentServices as |currentService index|}}
+              <div class='current-service-information'>
+                {{#if currentService.label}}
+                  <div>
+                    <span class='p-key'>Label: </span>
+                    <span class='p-value'>{{currentService.label}}</span>
+                  </div>
+                {{/if}}
+                {{#if currentService.category}}
+                  <div>
+                    <span class='p-key'>Category: </span>
+                    <span class='p-value'>{{currentService.category}}</span>
+                  </div>
+                {{/if}}
+                {{#if currentService.version}}
+                  <div>
+                    <span class='p-key'>Version: </span>
+                    <span class='p-value'>{{currentService.version}}</span>
+                  </div>
+                {{/if}}
+                {{#if currentService.firstSeen}}
+                  <div>
+                    <span class='p-key'>First Seen: </span>
+                    <span class='p-value'>{{moment-format
+                        currentService.firstSeen
+                        'MM/DD/YYYY HH:mm:ss'
+                        timeZone=timezone
+                      }}</span>
+                  </div>
+                {{/if}}
+                {{#if currentService.lastSeen}}
+                  <div>
+                    <span class='p-key'>First Seen: </span>
+                    <span class='p-value'>{{moment-format
+                        currentService.lastSeen
+                        'MM/DD/YYYY HH:mm:ss'
+                        timeZone=timezone
+                      }}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/each}}
+          {{else}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}>
+              <span class='text'>Current Services</span>
+              {{fa-icon 'angle-down'}}
+            </a>
+          {{/if}}
+
+          {{! Recent Services}}
+          {{#if (get recentServiceStates index)}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}>
+              <span class='text'><span class='desc'>Recent Services:</span> {{UNIQUE_VALUE}}</span>
+              {{fa-icon 'angle-up'}}
+            </a>
+            {{#each service.recentServices as |recentService index|}}
+              <div class='recent-service-information'>
+                {{#if recentService.label}}
+                  <div>
+                    <span class='p-key'>Label: </span>
+                    <span class='p-value'>{{recentService.label}}</span>
+                  </div>
+                {{/if}}
+                {{#if recentService.category}}
+                  <div>
+                    <span class='p-key'>Category: </span>
+                    <span class='p-value'>{{recentService.category}}</span>
+                  </div>
+                {{/if}}
+                {{#if recentService.version}}
+                  <div>
+                    <span class='p-key'>Version: </span>
+                    <span class='p-value'>{{recentService.version}}</span>
+                  </div>
+                {{/if}}
+                {{#if recentService.firstSeen}}
+                  <div>
+                    <span class='p-key'>First Seen: </span>
+                    <span class='p-value'>{{moment-format
+                        recentService.firstSeen
+                        'MM/DD/YYYY HH:mm:ss'
+                        timeZone=timezone
+                      }}</span>
+                  </div>
+                {{/if}}
+                {{#if recentService.lastSeen}}
+                  <div>
+                    <span class='p-key'>First Seen: </span>
+                    <span class='p-value'>{{moment-format
+                        recentService.lastSeen
+                        'MM/DD/YYYY HH:mm:ss'
+                        timeZone=timezone
+                      }}</span>
+                  </div>
+                {{/if}}
+              </div>
+            {{/each}}
+          {{else}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}>
+              <span class='text'>Recent Services</span>
+              {{fa-icon 'angle-down'}}
+            </a>
+          {{/if}}
+        {{/each}}
+      </div>
+    {{else}}
+      <div class='alert alert-info mt-2' role='alert'>
+        No Service Details Found
+      </div>
+    {{/if}}
+  {{/if}}
+{{/if}}
+
+{{#if (eq activeTab 'subdomains')}}
+  {{#if (and block._state.searchRunning.subdomains (not block._state.initialLoadAttempted.subdomains))}}
+    <div class='alert alert-info mt-2' role='alert'>
+      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+      Loading Resolution/subdomains
+    </div>
+  {{else if (or
+    details.subdomains.isConnectionReset
+    details.subdomains.maxRequestQueueLimitHit
+    details.subdomains.isGatewayTimeout
+    details.subdomains.apiKeyLimitReached
+    details.subdomains.onMessageTimeout
+  )}}
+    {{#unless details.subdomains.apiKeyLimitReached}}
+      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'subdomains'}}>
+        {{#if block._state.searchRunning.subdomains}}
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+        {{else}}
+          Retry subdomains Search
+        {{/if}}
+      </button>
+    {{/unless}}
+    <div class='mt-1'>
+      {{#if details.subdomains.onMessageTimeout}}
+        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry subdomains
+          Search" button.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
+            run the search via the PassiveTotal website instead.</span>
+        </div>
+      {{else if details.subdomains.apiKeyLimitReached}}
+        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+          will be able to run searches again.</span>
+        <div class='mt-1'>
+          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+            PassiveTotal Web Interface
+            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+        </div>
+        <div>
+          <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
+            quota.</span>
+        </div>
+        {{#if details.quota.user}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches:</span>
+              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                of
+                {{details.quota.user.licenseLimits.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration: </span>
+              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.user.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+        {{#if details.quota.organization}}
+          <div class='mt-1'>
+            <div>
+              <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                Your Organization Search Quota</span>
+            </div>
+            <div>
+              <span class='p-key'>API Searches: </span>
+              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                of
+                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                used</span>
+            </div>
+            <div>
+              <span class='p-key'>Quota Duration:</span>
+              <span>{{details.quota.organization.quotaInterval}}</span>
+            </div>
+            <div>
+              <span class='p-key'>Next Quota Reset: </span>
+              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+            </div>
+          </div>
+        {{/if}}
+      {{else}}
+        <div class='mt-1'>
+          <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
+            subdomains Search" button.</span>
+        </div>
+      {{/if}}
+    </div>
+  {{else}}
+    {{#if details.subdomains}}
+      <h1 class='p-title'>
+        {{fa-icon 'ethernet' fixedWidth=true}}
+        Subdomains
+      </h1>
+
+      <div>
+        <span class='p-key'>Primary Domain: </span>
+        <span class='p-value'>{{details.subdomains.primaryDomain}}</span>
+      </div>
+
+      <div>
+        <span class='p-key'>Query Value: </span>
+        <span class='p-value'>{{details.subdomains.queryValue}}</span>
+      </div>
+
+      <div class='subdomain-info'>
+        {{#each details.subdomains.subdomains as |subdomain index|}}
+          {{#if (get subdomainStates index)}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableSubdomains' index)}}>
+              <span class='text'><span class='desc'>Subdomains:</span> {{UNIQUE_VALUE}}</span>
+              {{fa-icon 'angle-up'}}
+            </a>
+            <div>
+              <span class='p-value'>{{subdomain}}</span>
+            </div>
+          {{else}}
+            <a href='#' class='expandable-title' {{on 'click' (action 'toggleExpandableSubdomains' index)}}>
+              <span class='text'>Subdomains</span>
+              {{fa-icon 'angle-down'}}
+            </a>
+          {{/if}}
+        {{/each}}
+      </div>
+    {{else}}
+      <div class='alert alert-info mt-2' role='alert'>
+        No Subdomains Found
+      </div>
     {{/if}}
   {{/if}}
 {{/if}}
