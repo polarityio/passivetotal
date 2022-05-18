@@ -125,16 +125,8 @@ polarity.export = PolarityComponent.extend({
       this.set(`subdomainStates`, modifiedExpandableTitleStates);
     },
     selectResultType: function (searchType) {
-      // current page property that is the targetValue
-      // When a another page is clicked the current page property toggles the target value boolen,
-      // the current page property is updated with new target value
-      // console.log(result);
-      // this.set('currentInfo', result);
-      // console.log(this.get('currentInfo'));
-      // this.get('block').notifyPropertyChange('data');
-      console.log(searchType);
       this.set('currentInfo', searchType);
-      // Only attempt to load data once when users click on a tab
+
       if (this.getInitialLoadAttempted(searchType) === false) {
         this.runSearch(searchType);
       }
@@ -153,7 +145,7 @@ polarity.export = PolarityComponent.extend({
 
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        console.log(result)
+        console.log(result);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
