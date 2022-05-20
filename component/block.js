@@ -2,14 +2,20 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('details.summary'),
+  recentServiceStates: {},
+  currentServiceStates: {},
+  subdomainStates: {},
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   activeTab: 'summary',
   errorMsg: '',
   runningRetrySearch: false,
+  subSubdomains: false,
   init() {
     this._super(...arguments);
+
+    this.set('showSubdomains', this.get('details.subdomains.subdomains'));
 
     if (!this.get('block._state')) {
       this.set('block._state', {});
@@ -22,7 +28,10 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        quota: false
+        quota: false,
+        subdomains: false,
+        osint: false,
+        services: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -33,7 +42,10 @@ polarity.export = PolarityComponent.extend({
         certificates: false,
         pairs: false,
         reputation: false,
-        articles: false
+        articles: false,
+        subdomains: false,
+        osint: false,
+        services: false
       });
     }
   },
@@ -72,6 +84,7 @@ polarity.export = PolarityComponent.extend({
   },
   actions: {
     changeTab: function (tabName) {
+      console.log(tabName);
       this.set('activeTab', tabName);
       // Only attempt to load data once when users click on a tab
       if (this.getInitialLoadAttempted(tabName) === false) {
@@ -89,6 +102,27 @@ polarity.export = PolarityComponent.extend({
     },
     getQuota: function () {
       this.fetchQuota();
+    },
+    toggleExpandableRecentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('recentServiceStates'), {
+        [index]: !this.get('recentServiceStates')[index]
+      });
+
+      this.set(`recentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableCurrentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('currentServiceStates'), {
+        [index]: !this.get('currentServiceStates')[index]
+      });
+
+      this.set(`currentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableSubdomains: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('subdomainStates'), {
+        [index]: !this.get('subdomainStates')[index]
+      });
+
+      this.set(`subdomainStates`, modifiedExpandableTitleStates);
     }
   },
   runSearch(searchType) {
@@ -99,8 +133,12 @@ polarity.export = PolarityComponent.extend({
       searchType: searchType,
       entity: this.get('block.entity')
     };
+
+    console.log(payload);
+
     this.sendIntegrationMessage(payload)
       .then((result) => {
+        console.log('herherere', result, payload);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
