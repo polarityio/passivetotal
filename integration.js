@@ -544,7 +544,9 @@ function onMessage(payload, options, cb) {
       break;
     case 'pdns':
       doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
+        Logger.trace({ PDNS: pdns });
         const resolutions = orderBy('lastSeen', 'asc', pdns.body.results.slice(0, options.records));
+
         onMessageResultHandler(
           err,
           pdns,
