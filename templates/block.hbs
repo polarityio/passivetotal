@@ -2015,6 +2015,55 @@
         </div>
       {{/if}}
     {{/if}}
+
+    <div class='insights'>
+      <div class='toggle-header'>
+        <span class='p-action' {{action 'toggleShowResults' 'showInsights'}}>
+          {{fa-icon 'eye' fixedWidth=true}}
+          Insights
+          {{fa-icon (if showInsights 'caret-up' 'caret-down') fixedWidth=true}}
+        </span>
+      </div>
+
+      {{#if showInsights}}
+        {{#if details.insights.global_tags}}
+          <h1 class='insight-tag'>
+            {{fa-icon 'search' fixedWidth=true}}
+            Tags
+          </h1>
+
+          {{#each details.insights.global_tags as |globalTag|}}
+            <div class='tag-value'>
+              <span class='tag'>{{globalTag}}</span>
+            </div>
+          {{/each}}
+        {{/if}}
+        {{#if details.insights.tags}}
+          <h1 class='insight-tag'>
+            {{fa-icon 'globe' fixedWidth=true}}
+            Global Tags
+          </h1>
+
+          {{#each details.insights.tags as |tag|}}
+            <div class='tag-value'>
+              <span class='tag'>{{tag}}</span>
+            </div>
+          {{/each}}
+        {{/if}}
+        {{#if details.insights.system_tags}}
+          <h1 class='insight-tag'>
+            {{fa-icon 'solar-system' fixedWidth=true}}
+            System Tags
+          </h1>
+          {{#each details.insights.system_tags as |systemTag|}}
+            <div class='tag-value'>
+              <span class='tag'>{{systemTag}}</span>
+            </div>
+          {{/each}}
+        {{/if}}
+      {{/if}}
+
+    </div>
     {{! view quota }}
     <div class='mt-1'>
       <span class='p-action' {{action 'showQuota'}}>
@@ -2092,6 +2141,7 @@
           </div>
         {{/if}}
       {{/if}}
+
     </div>
   {{/if}}
 {{/if}}

@@ -9,9 +9,9 @@ polarity.export = PolarityComponent.extend({
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   activeTab: 'summary',
+  showInsights: false,
   errorMsg: '',
   runningRetrySearch: false,
-  subSubdomains: false,
   init() {
     this._super(...arguments);
 
@@ -31,7 +31,8 @@ polarity.export = PolarityComponent.extend({
         quota: false,
         subdomains: false,
         osint: false,
-        services: false
+        services: false,
+        insights: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -45,8 +46,11 @@ polarity.export = PolarityComponent.extend({
         articles: false,
         subdomains: false,
         osint: false,
-        services: false
+        services: false,
+        insights: false
       });
+
+      this.set('showInsights', this.get('details.insights'));
     }
   },
   hasWhoisAdmin: Ember.computed('details.whois.admin', function () {
@@ -90,6 +94,10 @@ polarity.export = PolarityComponent.extend({
       if (this.getInitialLoadAttempted(tabName) === false) {
         this.runSearch(tabName);
       }
+    },
+    toggleShowResults: function (name) {
+      this.toggleProperty(name);
+      this.runSearch('insights');
     },
     retrySearch: function (searchType) {
       this.runSearch(searchType);
@@ -138,7 +146,7 @@ polarity.export = PolarityComponent.extend({
 
     this.sendIntegrationMessage(payload)
       .then((result) => {
-        console.log('herherere', result, payload);
+        console.log(result);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
