@@ -54,7 +54,7 @@ polarity.export = PolarityComponent.extend({
     return admin ? admin.length > 0 : false;
   }),
   hasWhoisTech: Ember.computed('details.whois.tech', function () {
-    const tech = Object.keys(this.get('details.whois.tech'));
+    const tech = Object.keys(this.get('details.whopis.tech'));
     return tech ? tech.length > 0 : false;
   }),
   hasWhoisRegistrant: Ember.computed('details.whois.registrant', function () {
@@ -71,7 +71,7 @@ polarity.export = PolarityComponent.extend({
     return Array.isArray(this.get('details.malware'));
   }),
   pdnsIsLoaded: Ember.computed('details.pdns', function () {
-    return Array.isArray(this.get('details.pdns'));
+    return Array.isArray(this.get('details.pdns.pdnsData'));
   }),
   pairsIsLoaded: Ember.computed('details.pairs', function () {
     return Array.isArray(this.get('details.pairs'));
