@@ -445,6 +445,20 @@ function onMessage(payload, options, cb) {
   const entity = payload.entity;
 
   switch (payload.searchType) {
+    case 'insights':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, insights) => {
+          Logger.trace({ insights }, 'insights Lookup');
+          onMessageResultHandler(err, insights, () => getBody(insights), options, cb);
+        }
+      );
+      break;
     case 'subdomains':
       doDetailsLookup(
         {
