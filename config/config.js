@@ -85,7 +85,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -131,6 +131,15 @@ module.exports = {
       type: 'number',
       userCanEdit: true,
       adminOnly: false
+    },
+    {
+      key: 'searchHistorical',
+      name: 'WHOIS historical data',
+      description: 'Ability to search WHOIS historical data',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'enableRep',

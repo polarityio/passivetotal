@@ -2,10 +2,17 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('details.summary'),
+  serviceStates: {},
+  recentServiceStates: {},
+  currentServiceStates: {},
+  subdomainStates: {},
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   activeTab: 'summary',
+  showInsights: false,
+  showServices: false,
+  pairs: false,
   errorMsg: '',
   runningRetrySearch: false,
   init() {
@@ -22,7 +29,11 @@ polarity.export = PolarityComponent.extend({
         pairs: false,
         reputation: false,
         articles: false,
-        quota: false
+        quota: false,
+        subdomains: false,
+        osint: false,
+        services: false,
+        insights: false
       });
 
       this.set('block._state.initialLoadAttempted', {
@@ -33,20 +44,26 @@ polarity.export = PolarityComponent.extend({
         certificates: false,
         pairs: false,
         reputation: false,
-        articles: false
+        articles: false,
+        subdomains: false,
+        osint: false,
+        services: false,
+        insights: false
       });
+
+      this.set('showInsights', this.get('details.insights'));
     }
   },
-  hasWhoisAdmin: Ember.computed('details.whois.admin', function(){
-    const admin = Object.keys(this.get('details.whois.admin'))
+  hasWhoisAdmin: Ember.computed('details.whois.admin', function () {
+    const admin = Object.keys(this.get('details.whois.admin'));
     return admin ? admin.length > 0 : false;
   }),
-  hasWhoisTech: Ember.computed('details.whois.tech', function(){
-    const tech = Object.keys(this.get('details.whois.tech'))
+  hasWhoisTech: Ember.computed('details.whois.tech', function () {
+    const tech = Object.keys(this.get('details.whopis.tech'));
     return tech ? tech.length > 0 : false;
   }),
-  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function(){
-    const registrant = Object.keys(this.get('details.whois.registrant'))
+  hasWhoisRegistrant: Ember.computed('details.whois.registrant', function () {
+    const registrant = Object.keys(this.get('details.whois.registrant'));
     return registrant ? registrant.length > 0 : false;
   }),
   articlesIsLoaded: Ember.computed('details.articles', function () {
@@ -59,7 +76,7 @@ polarity.export = PolarityComponent.extend({
     return Array.isArray(this.get('details.malware'));
   }),
   pdnsIsLoaded: Ember.computed('details.pdns', function () {
-    return Array.isArray(this.get('details.pdns'));
+    return Array.isArray(this.get('details.pdns.pdnsData'));
   }),
   pairsIsLoaded: Ember.computed('details.pairs', function () {
     return Array.isArray(this.get('details.pairs'));
@@ -78,6 +95,13 @@ polarity.export = PolarityComponent.extend({
         this.runSearch(tabName);
       }
     },
+    toggleShowResults: function (searchType) {
+      this.toggleProperty(searchType);
+
+      if (this.getInitialLoadAttempted(searchType) === false) {
+        this.runSearch(searchType);
+      }
+    },
     retrySearch: function (searchType) {
       this.runSearch(searchType);
     },
@@ -89,6 +113,27 @@ polarity.export = PolarityComponent.extend({
     },
     getQuota: function () {
       this.fetchQuota();
+    },
+    toggleExpandableRecentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('recentServiceStates'), {
+        [index]: !this.get('recentServiceStates')[index]
+      });
+
+      this.set(`recentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableCurrentServiceTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('currentServiceStates'), {
+        [index]: !this.get('currentServiceStates')[index]
+      });
+
+      this.set(`currentServiceStates`, modifiedExpandableTitleStates);
+    },
+    toggleExpandableSubdomains: function (index) {
+      const modifiedExpandableTitleStates = Object.assign({}, this.get('subdomainStates'), {
+        [index]: !this.get('subdomainStates')[index]
+      });
+
+      this.set(`subdomainStates`, modifiedExpandableTitleStates);
     }
   },
   runSearch(searchType) {
@@ -99,8 +144,12 @@ polarity.export = PolarityComponent.extend({
       searchType: searchType,
       entity: this.get('block.entity')
     };
+
+    console.log(payload);
+
     this.sendIntegrationMessage(payload)
       .then((result) => {
+        console.log(result);
         this.set(`details.${searchType}`, result.data);
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);

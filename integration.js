@@ -269,7 +269,8 @@ function doDetailsLookup(request, entity, options, cb) {
       cb(processedResult.error);
       return;
     }
-    //Logger.trace({ processedResult }, 'Looking at the Result');
+
+    Logger.trace({ processedResult }, 'Looking at the Result');
     cb(null, processedResult);
   });
 }
@@ -296,6 +297,7 @@ function reachedSearchLimit(err, result) {
 }
 
 const getBody = getOr([], 'body');
+const getBodyWithResults = getOr([], 'body.results');
 const getRecords = (recordsCount, result) => flow(get('body.results'), slice(0, recordsCount))(result);
 const getArticles = (recordsCount, result) => {
   const articles = _.get(result, 'body.articles', []);
@@ -418,6 +420,7 @@ function _isEntityBlocklisted(entity, options) {
  */
 function onMessageResultHandler(err, data, getDataHandler, options, cb) {
   const searchLimitObject = reachedSearchLimit(err, data);
+
   if (searchLimitObject) {
     // The user hit a search limit so we're going to return their current API usage
     getQuota(options, (err, quota) => {
@@ -440,27 +443,133 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
 
 function onMessage(payload, options, cb) {
   const entity = payload.entity;
+
   switch (payload.searchType) {
-    case 'whois':
+    case 'insights':
       doDetailsLookup(
         {
-          path: '/v2/whois',
+          path: '/v2/enrichment',
           qs: { query: entity.value }
         },
         entity,
         options,
+        (err, insights) => {
+          Logger.trace({ insights }, 'insights Lookup');
+          onMessageResultHandler(err, insights, () => getBody(insights), options, cb);
+        }
+      );
+      break;
+    case 'subdomains':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/subdomains',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, subdomains) => {
+          Logger.trace({ subdomains }, 'subdomains Lookup');
+          onMessageResultHandler(err, subdomains, () => getBody(subdomains), options, cb);
+        }
+      );
+      break;
+    case 'services':
+      doDetailsLookup(
+        {
+          path: '/v2/services',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, services) => {
+          Logger.trace({ services }, 'services Lookup');
+
+          onMessageResultHandler(
+            err,
+            services,
+            () =>
+              getBodyWithResults({
+                body: {
+                  results: { servicesData: services.body.results, totalRecords: services.body.totalRecords }
+                }
+              }),
+            options,
+            cb
+          );
+        }
+      );
+      break;
+    case 'whois':
+      const qs = options.searchHistorical ? { query: entity.value, history: true } : { query: entity.value };
+      doDetailsLookup(
+        {
+          path: '/v2/whois',
+          qs
+        },
+        entity,
+        options,
         (err, whois) => {
-          Logger.trace({ whois }, 'WHOIS Lookup');
-          onMessageResultHandler(err, whois, () => getBody(whois), options, cb);
+          if (options.searchHistorical) {
+            const responseWithHistoricalData = whois.body.results.slice(0, 10);
+            Logger.trace(responseWithHistoricalData, 'responseWithHistoricalData');
+
+            onMessageResultHandler(
+              err,
+              whois,
+              () =>
+                getBodyWithResults({
+                  body: { results: { whoisData: responseWithHistoricalData, totalRecords: whois.body.totalRecords } }
+                }),
+              options,
+              cb
+            );
+          } else {
+            Logger.trace({ whois }, 'whois');
+            //When the request for whois data is made with history = true, the response is an array of objects, opposed to a single object,
+            //to avoid having to manage the different response shapes, we put the body of the response for single object in an array.
+            onMessageResultHandler(err, whois, () => getBody({ body: { whoisData: [whois.body] } }), options, cb);
+          }
+        }
+      );
+      break;
+    case 'osint':
+      doDetailsLookup(
+        {
+          path: '/v2/enrichment/osint',
+          qs: { query: entity.value }
+        },
+        entity,
+        options,
+        (err, osint) => {
+          Logger.trace({ osint }, 'osint Lookup');
+
+          onMessageResultHandler(
+            err,
+            osint,
+            () =>
+              getBodyWithResults({
+                body: { results: { osintData: osint.body.results } }
+              }),
+            options,
+            cb
+          );
         }
       );
       break;
     case 'pdns':
       doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
+        Logger.trace({ PDNS: pdns });
+        const resolutions = orderBy('lastSeen', 'asc', pdns.body.results.slice(0, options.records));
+
         onMessageResultHandler(
           err,
           pdns,
-          () => orderBy('lastSeen', 'asc', getRecords(options.records, pdns)),
+          () =>
+            getBodyWithResults({
+              body: {
+                results: { pdnsData: resolutions, totalRecords: pdns.body.results.length }
+              }
+            }),
           options,
           cb
         );
