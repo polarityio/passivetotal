@@ -2,6 +2,7 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('details.summary'),
+  serviceStates: {},
   recentServiceStates: {},
   currentServiceStates: {},
   subdomainStates: {},
@@ -10,12 +11,12 @@ polarity.export = PolarityComponent.extend({
   }),
   activeTab: 'summary',
   showInsights: false,
+  showServices: false,
+  pairs: false,
   errorMsg: '',
   runningRetrySearch: false,
   init() {
     this._super(...arguments);
-
-    this.set('showSubdomains', this.get('details.subdomains.subdomains'));
 
     if (!this.get('block._state')) {
       this.set('block._state', {});
@@ -88,16 +89,18 @@ polarity.export = PolarityComponent.extend({
   },
   actions: {
     changeTab: function (tabName) {
-      console.log(tabName);
       this.set('activeTab', tabName);
       // Only attempt to load data once when users click on a tab
       if (this.getInitialLoadAttempted(tabName) === false) {
         this.runSearch(tabName);
       }
     },
-    toggleShowResults: function (name) {
-      this.toggleProperty(name);
-      this.runSearch('insights');
+    toggleShowResults: function (searchType) {
+      this.toggleProperty(searchType);
+
+      if (this.getInitialLoadAttempted(searchType) === false) {
+        this.runSearch(searchType);
+      }
     },
     retrySearch: function (searchType) {
       this.runSearch(searchType);
