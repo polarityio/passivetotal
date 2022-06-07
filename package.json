@@ -1,7 +1,7 @@
 {
   "main": "./integration.js",
   "name": "PassiveTotal",
-  "version": "3.5.5",
+  "version": "3.6.0",
   "private": true,
   "dependencies": {
     "async": "^3.2.1",
