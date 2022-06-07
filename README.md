@@ -37,9 +37,6 @@ PassiveTotal API Key
 ### Number of Associated Records to Return
 Total number of associated Malware and OSINT records to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Default is set to 10.
 
-### Search Historical WHOIS Data 
-If checked the API will query historical WHOIS data. Only the first 10 records will be displayed. 
-
 ### Enable Reputation Lookup
 
 If checked, the integration will perform an optional onDetails API request to retrieve the entity reputation details. This option requires additional privileged API access.
