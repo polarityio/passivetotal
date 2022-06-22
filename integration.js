@@ -591,7 +591,7 @@ function onMessage(payload, options, cb) {
     case 'certificates':
       doDetailsLookup(
         {
-          path: '/v2/ssl-certificate/search',
+          path: '/v2/ssl-certificate/history',
           qs: { query: entity.value, field: 'subjectCommonName' }
         },
         entity,
