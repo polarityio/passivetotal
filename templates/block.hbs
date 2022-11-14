@@ -157,9 +157,6 @@
                 spin=true
                 class='loading-icon'
               }}{{/if}}
-            {{#if pdnsIsLoaded}}
-              ({{details.pdns.totalRecords}})
-            {{/if}}
           </a>
         </li>
       {{/if}}
@@ -446,11 +443,10 @@
         {{/if}}
       {{/if}}
     {{/if}}
-  {{/if}}
 
-  {{!-- Data Card --}}
-  {{#if (eq activeTab 'summary')}}
-    <div class="sticky-container position-fixed-scrollable-container">
+    {{!-- Data Card --}}
+    {{#if (eq activeTab 'summary')}}
+      <div class="sticky-container position-fixed-scrollable-container">
         {{!-- start of data card --}}
         <div class="sticky-header" {{action "toggleShowResults" "summary"}}>
           <div>
@@ -732,17 +728,17 @@
         {{!-- start of services --}}
         {{#if enabledDatasources.services}}
           <div class='sticky-header' {{action 'toggleShowResults' 'services'}}>
-          <div>
-            {{fa-icon icon="ethernet" fixedWidth=true class="sticky-header-icon"}}
-            Services/Ports
-            {{#if details.services.data.services.length}}
-              {{#if block._state.expanded.services}}
-                ({{details.services.data.services.length}})
-              {{else}}
-                (10/{{details.services.data.services.length}})
+            <div>
+              {{fa-icon icon="ethernet" fixedWidth=true class="sticky-header-icon"}}
+              Services/Ports
+              {{#if details.services.data.services.length}}
+                {{#if block._state.expanded.services}}
+                  ({{details.services.data.services.length}})
+                {{else}}
+                  (10/{{details.services.data.services.length}})
+                {{/if}}
               {{/if}}
-            {{/if}}
-          </div>
+            </div>
             {{#if (and block._state.visible.services (gt details.services.data.services.length 10))}}
               <div>
                 <span class="header-action" {{action "toggleExpanded" "services" bubbles=false}}>
@@ -756,286 +752,286 @@
                 </span>
               </div>
             {{/if}}
-          <div class="p-action">
-            {{fa-icon (if block._state.visible.services 'caret-up' 'caret-down') fixedWidth=true}}
+            <div class="p-action">
+              {{fa-icon (if block._state.visible.services 'caret-up' 'caret-down') fixedWidth=true}}
+            </div>
           </div>
-        </div>
           {{#if block._state.visible.services}}
-          <div class="padded sticky-body">
-            {{#if (and block._state.searchRunning.services (not block._state.initialLoadAttempted.services))}}
-              <div>
-                {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-                Loading Services
-              </div>
-            {{else if (or
-                    details.services.isConnectionReset
-                    details.services.maxRequestQueueLimitHit
-                    details.services.isGatewayTimeout
-                    details.services.apiKeyLimitReached
-                    details.services.onMessageTimeout
-            )}}
-              {{#unless details.services.apiKeyLimitReached}}
-                <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'services'}}>
-                  {{#if block._state.searchRunning.services}}
-                    {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-                  {{else}}
-                    Retry Pairs Search
-                  {{/if}}
-                </button>
-              {{/unless}}
-              <div class='mt-1'>
-                {{#if details.services.onMessageTimeout}}
-                  <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Pairs
+            <div class="padded sticky-body">
+              {{#if (and block._state.searchRunning.services (not block._state.initialLoadAttempted.services))}}
+                <div>
+                  {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+                  Loading Services
+                </div>
+              {{else if (or
+                      details.services.isConnectionReset
+                      details.services.maxRequestQueueLimitHit
+                      details.services.isGatewayTimeout
+                      details.services.apiKeyLimitReached
+                      details.services.onMessageTimeout
+              )}}
+                {{#unless details.services.apiKeyLimitReached}}
+                  <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'services'}}>
+                    {{#if block._state.searchRunning.services}}
+                      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+                    {{else}}
+                      Retry Pairs Search
+                    {{/if}}
+                  </button>
+                {{/unless}}
+                <div class='mt-1'>
+                  {{#if details.services.onMessageTimeout}}
+                    <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Pairs
                     Search" button.</span>
-                  <div class='mt-1'>
-                    <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-                      PassiveTotal Web Interface
-                      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-                  </div>
-                  <div>
+                    <div class='mt-1'>
+                      <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                        PassiveTotal Web Interface
+                        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+                    </div>
+                    <div>
                     <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link
                       to run the search via the PassiveTotal website instead.</span>
-                  </div>
-                {{else if details.services.apiKeyLimitReached}}
-                  <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
-                    You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
+                    </div>
+                  {{else if details.services.apiKeyLimitReached}}
+                    <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+                      You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
                     you will be able to run searches again.</span>
-                  <div class='mt-1'>
-                    <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-                      PassiveTotal Web Interface
-                      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-                  </div>
-                  <div>
+                    <div class='mt-1'>
+                      <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                        PassiveTotal Web Interface
+                        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+                    </div>
+                    <div>
                     <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a
                       different quota.</span>
-                  </div>
-                  {{#if details.quota.user}}
-                    <div class='mt-1'>
-                      <div>
-                        <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>API Searches:</span>
-                        <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
-                          of
-                          {{details.quota.user.licenseLimits.searchApi}}
-                          used</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Quota Duration: </span>
-                        <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Next Quota Reset: </span>
-                        <span class='p-value'>{{details.quota.user.next_reset}}</span>
-                      </div>
                     </div>
-                  {{/if}}
-                  {{#if details.quota.organization}}
-                    <div class='mt-1'>
-                      <div>
+                    {{#if details.quota.user}}
+                      <div class='mt-1'>
+                        <div>
+                          <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>API Searches:</span>
+                          <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                            of
+                            {{details.quota.user.licenseLimits.searchApi}}
+                            used</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Quota Duration: </span>
+                          <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Next Quota Reset: </span>
+                          <span class='p-value'>{{details.quota.user.next_reset}}</span>
+                        </div>
+                      </div>
+                    {{/if}}
+                    {{#if details.quota.organization}}
+                      <div class='mt-1'>
+                        <div>
                         <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
                           Your Organization Search Quota</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>API Searches: </span>
+                          <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                            of
+                            {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                            used</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Quota Duration:</span>
+                          <span>{{details.quota.organization.quotaInterval}}</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Next Quota Reset: </span>
+                          <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span class='p-key'>API Searches: </span>
-                        <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
-                          of
-                          {{details.quota.organization.licenseLimits.enterprise.searchApi}}
-                          used</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Quota Duration:</span>
-                        <span>{{details.quota.organization.quotaInterval}}</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Next Quota Reset: </span>
-                        <span class='p-value'>{{details.quota.organization.next_reset}}</span>
-                      </div>
-                    </div>
-                  {{/if}}
-                {{else}}
-                  <div class='mt-1'>
+                    {{/if}}
+                  {{else}}
+                    <div class='mt-1'>
                     <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the
                       "Retry Pairs Search" button.</span>
-                  </div>
-                {{/if}}
-              </div>
-            {{else}}
-
-              {{#if details.services.data.services}}
-                <div class='mb-2'>
-                  <h1 class='p-title'>
-                    {{fa-icon 'network-wired' fixedWidth=true}}
-                    Service Details
-                  </h1>
-                  {{#each (take (if block._state.expanded.services details.services.data.services.length 10) details.services.data.services) as |service index|}}
-                    {{#if (gt index 0)}}
-                      <hr />
-                    {{/if}}
-                    {{#if service.portNumber}}
-                      <div>
-                        <span class='p-key'>Port Number: </span>
-                        <span class='p-value'>{{service.portNumber}}</span>
-                      </div>
-                    {{/if}}
-                    {{#if service.status}}
-                      <div>
-                        <span class='p-key'>Status: </span>
-                        <span class='p-value'>{{service.status}}</span>
-                      </div>
-                    {{/if}}
-                    {{#if service.protocol}}
-                      <div>
-                        <span class='p-key'>Protocol: </span>
-                        <span class='p-value'>{{service.protocol}}</span>
-                      </div>
-                    {{/if}}
-                    {{! Current Services}}
-                    {{#if (get currentServiceStates index)}}
-                      <a
-                              href='#'
-                              class='expandable-title'
-                        {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}
-                      >
-                        <span class='text'><span class='desc'>Current Services:</span> {{UNIQUE_VALUE}}</span>
-                        {{fa-icon 'angle-up'}}
-                      </a>
-
-                      {{#each service.currentServices as |currentService index|}}
-                        <div class='current-service-information'>
-                          {{#if currentService.label}}
-                            <div>
-                              <span class='p-key'>Label: </span>
-                              <span class='p-value'>{{currentService.label}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if currentService.category}}
-                            <div>
-                              <span class='p-key'>Category: </span>
-                              <span class='p-value'>{{currentService.category}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if currentService.version}}
-                            <div>
-                              <span class='p-key'>Version: </span>
-                              <span class='p-value'>{{currentService.version}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if currentService.firstSeen}}
-                            <div>
-                              <span class='p-key'>First Seen: </span>
-                              <span class='p-value'>{{moment-format
-                                      currentService.firstSeen
-                                      'MM/DD/YYYY HH:mm:ss'
-                                      timeZone=timezone
-                              }}</span>
-                            </div>
-                          {{/if}}
-                          {{#if currentService.lastSeen}}
-                            <div>
-                              <span class='p-key'>First Seen: </span>
-                              <span class='p-value'>{{moment-format
-                                      currentService.lastSeen
-                                      'MM/DD/YYYY HH:mm:ss'
-                                      timeZone=timezone
-                              }}</span>
-                            </div>
-                          {{/if}}
-                        </div>
-                      {{/each}}
-                    {{else}}
-                      <a
-                              href='#'
-                              class='expandable-title'
-                        {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}
-                      >
-                        <span class='text'>Current Services</span>
-                        {{fa-icon 'angle-down'}}
-                      </a>
-                    {{/if}}
-                    {{! Recent Services}}
-                    {{#if (get recentServiceStates index)}}
-                      <a
-                              href='#'
-                              class='expandable-title'
-                        {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}
-                      >
-                        <span class='text'><span class='desc'>Recent Services:</span> {{UNIQUE_VALUE}}</span>
-                        {{fa-icon 'angle-up'}}
-                      </a>
-                      {{#each service.recentServices as |recentService index|}}
-                        <div class='recent-service-information'>
-                          {{#if recentService.label}}
-                            <div>
-                              <span class='p-key'>Label: </span>
-                              <span class='p-value'>{{recentService.label}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if recentService.category}}
-                            <div>
-                              <span class='p-key'>Category: </span>
-                              <span class='p-value'>{{recentService.category}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if recentService.version}}
-                            <div>
-                              <span class='p-key'>Version: </span>
-                              <span class='p-value'>{{recentService.version}}</span>
-                            </div>
-                          {{/if}}
-                          {{#if recentService.firstSeen}}
-                            <div>
-                              <span class='p-key'>First Seen: </span>
-                              <span class='p-value'>{{moment-format
-                                      recentService.firstSeen
-                                      'MM/DD/YYYY HH:mm:ss'
-                                      timeZone=timezone
-                              }}</span>
-                            </div>
-                          {{/if}}
-                          {{#if recentService.lastSeen}}
-                            <div>
-                              <span class='p-key'>First Seen: </span>
-                              <span class='p-value'>{{moment-format
-                                      recentService.lastSeen
-                                      'MM/DD/YYYY HH:mm:ss'
-                                      timeZone=timezone
-                              }}</span>
-                            </div>
-                          {{/if}}
-                        </div>
-                      {{/each}}
-                    {{else}}
-                      <a
-                              href='#'
-                              class='expandable-title'
-                        {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}
-                      >
-                        <span class='text'>Recent Services</span>
-                        {{fa-icon 'angle-down'}}
-                      </a>
-                    {{/if}}
-                  {{/each}}
-                  {{#unless block._state.expanded.services}}
-                    <span class="p-footnote">Showing first 10 results</span>
-                  {{/unless}}
-                </div>
-              {{else if details.services.accessDenied}}
-                <div class='alert alert-warning' role='alert'>
-                  <div>Your API Key does not have access to the Services data source.</div>
-                  <div class="p-footnote mt-1">
-                    You can disable this data source via the integration's "Datasources" option.
-                  </div>
+                    </div>
+                  {{/if}}
                 </div>
               {{else}}
-                <div>
-                  No Services Found
-                </div>
+
+                {{#if details.services.data.services}}
+                  <div class='mb-2'>
+                    <h1 class='p-title'>
+                      {{fa-icon 'network-wired' fixedWidth=true}}
+                      Service Details
+                    </h1>
+                    {{#each (take (if block._state.expanded.services details.services.data.services.length 10) details.services.data.services) as |service index|}}
+                      {{#if (gt index 0)}}
+                        <hr />
+                      {{/if}}
+                      {{#if service.portNumber}}
+                        <div>
+                          <span class='p-key'>Port Number: </span>
+                          <span class='p-value'>{{service.portNumber}}</span>
+                        </div>
+                      {{/if}}
+                      {{#if service.status}}
+                        <div>
+                          <span class='p-key'>Status: </span>
+                          <span class='p-value'>{{service.status}}</span>
+                        </div>
+                      {{/if}}
+                      {{#if service.protocol}}
+                        <div>
+                          <span class='p-key'>Protocol: </span>
+                          <span class='p-value'>{{service.protocol}}</span>
+                        </div>
+                      {{/if}}
+                      {{! Current Services}}
+                      {{#if (get currentServiceStates index)}}
+                        <a
+                                href='#'
+                                class='expandable-title'
+                          {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}
+                        >
+                          <span class='text'><span class='desc'>Current Services:</span> {{UNIQUE_VALUE}}</span>
+                          {{fa-icon 'angle-up'}}
+                        </a>
+
+                        {{#each service.currentServices as |currentService index|}}
+                          <div class='current-service-information'>
+                            {{#if currentService.label}}
+                              <div>
+                                <span class='p-key'>Label: </span>
+                                <span class='p-value'>{{currentService.label}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if currentService.category}}
+                              <div>
+                                <span class='p-key'>Category: </span>
+                                <span class='p-value'>{{currentService.category}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if currentService.version}}
+                              <div>
+                                <span class='p-key'>Version: </span>
+                                <span class='p-value'>{{currentService.version}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if currentService.firstSeen}}
+                              <div>
+                                <span class='p-key'>First Seen: </span>
+                                <span class='p-value'>{{moment-format
+                                        currentService.firstSeen
+                                        'MM/DD/YYYY HH:mm:ss'
+                                        timeZone=timezone
+                                }}</span>
+                              </div>
+                            {{/if}}
+                            {{#if currentService.lastSeen}}
+                              <div>
+                                <span class='p-key'>First Seen: </span>
+                                <span class='p-value'>{{moment-format
+                                        currentService.lastSeen
+                                        'MM/DD/YYYY HH:mm:ss'
+                                        timeZone=timezone
+                                }}</span>
+                              </div>
+                            {{/if}}
+                          </div>
+                        {{/each}}
+                      {{else}}
+                        <a
+                                href='#'
+                                class='expandable-title'
+                          {{on 'click' (action 'toggleExpandableCurrentServiceTitle' index)}}
+                        >
+                          <span class='text'>Current Services</span>
+                          {{fa-icon 'angle-down'}}
+                        </a>
+                      {{/if}}
+                      {{! Recent Services}}
+                      {{#if (get recentServiceStates index)}}
+                        <a
+                                href='#'
+                                class='expandable-title'
+                          {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}
+                        >
+                          <span class='text'><span class='desc'>Recent Services:</span> {{UNIQUE_VALUE}}</span>
+                          {{fa-icon 'angle-up'}}
+                        </a>
+                        {{#each service.recentServices as |recentService index|}}
+                          <div class='recent-service-information'>
+                            {{#if recentService.label}}
+                              <div>
+                                <span class='p-key'>Label: </span>
+                                <span class='p-value'>{{recentService.label}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if recentService.category}}
+                              <div>
+                                <span class='p-key'>Category: </span>
+                                <span class='p-value'>{{recentService.category}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if recentService.version}}
+                              <div>
+                                <span class='p-key'>Version: </span>
+                                <span class='p-value'>{{recentService.version}}</span>
+                              </div>
+                            {{/if}}
+                            {{#if recentService.firstSeen}}
+                              <div>
+                                <span class='p-key'>First Seen: </span>
+                                <span class='p-value'>{{moment-format
+                                        recentService.firstSeen
+                                        'MM/DD/YYYY HH:mm:ss'
+                                        timeZone=timezone
+                                }}</span>
+                              </div>
+                            {{/if}}
+                            {{#if recentService.lastSeen}}
+                              <div>
+                                <span class='p-key'>First Seen: </span>
+                                <span class='p-value'>{{moment-format
+                                        recentService.lastSeen
+                                        'MM/DD/YYYY HH:mm:ss'
+                                        timeZone=timezone
+                                }}</span>
+                              </div>
+                            {{/if}}
+                          </div>
+                        {{/each}}
+                      {{else}}
+                        <a
+                                href='#'
+                                class='expandable-title'
+                          {{on 'click' (action 'toggleExpandableRecentServiceTitle' index)}}
+                        >
+                          <span class='text'>Recent Services</span>
+                          {{fa-icon 'angle-down'}}
+                        </a>
+                      {{/if}}
+                    {{/each}}
+                    {{#unless block._state.expanded.services}}
+                      <span class="p-footnote">Showing first 10 results</span>
+                    {{/unless}}
+                  </div>
+                {{else if details.services.accessDenied}}
+                  <div class='alert alert-warning' role='alert'>
+                    <div>Your API Key does not have access to the Services data source.</div>
+                    <div class="p-footnote mt-1">
+                      You can disable this data source via the integration's "Datasources" option.
+                    </div>
+                  </div>
+                {{else}}
+                  <div>
+                    No Services Found
+                  </div>
+                {{/if}}
               {{/if}}
-            {{/if}}
-          </div>
-        {{/if}}
+            </div>
+          {{/if}}
         {{/if}}
         {{!-- end of services --}}
 
@@ -1071,162 +1067,162 @@
             </div>
           </div>
           {{#if block._state.visible.pairs}}
-          <div class="padded sticky-body">
-            {{#if (and block._state.searchRunning.pairs (not block._state.initialLoadAttempted.pairs))}}
-              <div class='loading-message' role='alert'>
-                {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-                Loading Host Pairs
-              </div>
-            {{else if (or
-                    details.pairs.isConnectionReset
-                    details.pairs.maxRequestQueueLimitHit
-                    details.pairs.isGatewayTimeout
-                    details.pairs.apiKeyLimitReached
-                    details.pairs.onMessageTimeout
-            )}}
-              {{#unless details.pairs.apiKeyLimitReached}}
-                <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'pairs'}}>
-                  {{#if block._state.searchRunning.pairs}}
-                    {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-                  {{else}}
-                    Retry Pairs Search
-                  {{/if}}
-                </button>
-              {{/unless}}
-              <div class='mt-1'>
-                {{#if details.pairs.onMessageTimeout}}
-                  <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Pairs
+            <div class="padded sticky-body">
+              {{#if (and block._state.searchRunning.pairs (not block._state.initialLoadAttempted.pairs))}}
+                <div class='loading-message' role='alert'>
+                  {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+                  Loading Host Pairs
+                </div>
+              {{else if (or
+                      details.pairs.isConnectionReset
+                      details.pairs.maxRequestQueueLimitHit
+                      details.pairs.isGatewayTimeout
+                      details.pairs.apiKeyLimitReached
+                      details.pairs.onMessageTimeout
+              )}}
+                {{#unless details.pairs.apiKeyLimitReached}}
+                  <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'pairs'}}>
+                    {{#if block._state.searchRunning.pairs}}
+                      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+                    {{else}}
+                      Retry Pairs Search
+                    {{/if}}
+                  </button>
+                {{/unless}}
+                <div class='mt-1'>
+                  {{#if details.pairs.onMessageTimeout}}
+                    <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Pairs
                   Search" button.</span>
-                  <div class='mt-1'>
-                    <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-                      PassiveTotal Web Interface
-                      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-                  </div>
-                  <div>
+                    <div class='mt-1'>
+                      <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                        PassiveTotal Web Interface
+                        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+                    </div>
+                    <div>
                   <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link
                     to run the search via the PassiveTotal website instead.</span>
-                  </div>
-                {{else if details.pairs.apiKeyLimitReached}}
-                  <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
-                    You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
+                    </div>
+                  {{else if details.pairs.apiKeyLimitReached}}
+                    <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+                      You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when
                   you will be able to run searches again.</span>
-                  <div class='mt-1'>
-                    <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-                      PassiveTotal Web Interface
-                      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-                  </div>
-                  <div>
+                    <div class='mt-1'>
+                      <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                        PassiveTotal Web Interface
+                        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+                    </div>
+                    <div>
                   <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a
                     different quota.</span>
-                  </div>
-                  {{#if details.quota.user}}
-                    <div class='mt-1'>
-                      <div>
-                        <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>API Searches:</span>
-                        <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
-                          of
-                          {{details.quota.user.licenseLimits.searchApi}}
-                          used</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Quota Duration: </span>
-                        <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Next Quota Reset: </span>
-                        <span class='p-value'>{{details.quota.user.next_reset}}</span>
-                      </div>
                     </div>
-                  {{/if}}
-                  {{#if details.quota.organization}}
-                    <div class='mt-1'>
-                      <div>
+                    {{#if details.quota.user}}
+                      <div class='mt-1'>
+                        <div>
+                          <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>API Searches:</span>
+                          <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                            of
+                            {{details.quota.user.licenseLimits.searchApi}}
+                            used</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Quota Duration: </span>
+                          <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Next Quota Reset: </span>
+                          <span class='p-value'>{{details.quota.user.next_reset}}</span>
+                        </div>
+                      </div>
+                    {{/if}}
+                    {{#if details.quota.organization}}
+                      <div class='mt-1'>
+                        <div>
                       <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
                         Your Organization Search Quota</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>API Searches: </span>
+                          <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                            of
+                            {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                            used</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Quota Duration:</span>
+                          <span>{{details.quota.organization.quotaInterval}}</span>
+                        </div>
+                        <div>
+                          <span class='p-key'>Next Quota Reset: </span>
+                          <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span class='p-key'>API Searches: </span>
-                        <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
-                          of
-                          {{details.quota.organization.licenseLimits.enterprise.searchApi}}
-                          used</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Quota Duration:</span>
-                        <span>{{details.quota.organization.quotaInterval}}</span>
-                      </div>
-                      <div>
-                        <span class='p-key'>Next Quota Reset: </span>
-                        <span class='p-value'>{{details.quota.organization.next_reset}}</span>
-                      </div>
-                    </div>
-                  {{/if}}
-                {{else}}
-                  <div class='mt-1'>
+                    {{/if}}
+                  {{else}}
+                    <div class='mt-1'>
                   <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the
                     "Retry Pairs Search" button.</span>
-                  </div>
-                {{/if}}
-              </div>
-            {{else}}
-              {{#if block._state.visible.pairs}}
-                {{#if details.pairs.data.length}}
-                  {{#each (take (if block._state.expanded.pairs details.pairs.data.length 10) details.pairs.data) as |pair index|}}
-                    <div class='mb-2'>
-                      {{#if pair.parent}}
-                        <div>
-                          <span class='p-key'>Parent: </span>
-                          <span class='p-value'>{{pair.parent}}</span>
-                        </div>
-                      {{/if}}
-                      {{#if pair.child}}
-                        <div>
-                          <span class='p-key'>Child: </span>
-                          <span class='p-value'>{{pair.child}}</span>
-                        </div>
-                      {{/if}}
-                      {{#if pair.cause}}
-                        <div>
-                          <span class='p-key'>Cause: </span>
-                          <span class='p-value'>{{pair.cause}}</span>
-                        </div>
-                      {{/if}}
-                      {{#if pair.firstSeen}}
-                        <div>
-                          <span class='p-key'>First Seen: </span>
-                          <span class='p-value'>{{pair.firstSeen}}</span>
-                        </div>
-                      {{/if}}
-                      {{#if pair.lastSeen}}
-                        <div>
-                          <span class='p-key'>Last Seen: </span>
-                          <span class='p-value'>{{pair.lastSeen}}</span>
-                        </div>
-                      {{/if}}
                     </div>
-                  {{/each}}
-                  {{#unless block._state.expanded.pairs}}
-                    <span class="p-footnote">Showing first 10 results</span>
-                  {{/unless}}
-                {{else if details.pairs.accessDenied}}
-                  <div class='alert alert-warning' role='alert'>
-                    <div>Your API Key does not have access to Host Pairs data.</div>
-                    <div class="p-footnote mt-1">
-                      You can disable this data source via the integration's "Datasources" option.
+                  {{/if}}
+                </div>
+              {{else}}
+                {{#if block._state.visible.pairs}}
+                  {{#if details.pairs.data.length}}
+                    {{#each (take (if block._state.expanded.pairs details.pairs.data.length 10) details.pairs.data) as |pair index|}}
+                      <div class='mb-2'>
+                        {{#if pair.parent}}
+                          <div>
+                            <span class='p-key'>Parent: </span>
+                            <span class='p-value'>{{pair.parent}}</span>
+                          </div>
+                        {{/if}}
+                        {{#if pair.child}}
+                          <div>
+                            <span class='p-key'>Child: </span>
+                            <span class='p-value'>{{pair.child}}</span>
+                          </div>
+                        {{/if}}
+                        {{#if pair.cause}}
+                          <div>
+                            <span class='p-key'>Cause: </span>
+                            <span class='p-value'>{{pair.cause}}</span>
+                          </div>
+                        {{/if}}
+                        {{#if pair.firstSeen}}
+                          <div>
+                            <span class='p-key'>First Seen: </span>
+                            <span class='p-value'>{{pair.firstSeen}}</span>
+                          </div>
+                        {{/if}}
+                        {{#if pair.lastSeen}}
+                          <div>
+                            <span class='p-key'>Last Seen: </span>
+                            <span class='p-value'>{{pair.lastSeen}}</span>
+                          </div>
+                        {{/if}}
+                      </div>
+                    {{/each}}
+                    {{#unless block._state.expanded.pairs}}
+                      <span class="p-footnote">Showing first 10 results</span>
+                    {{/unless}}
+                  {{else if details.pairs.accessDenied}}
+                    <div class='alert alert-warning' role='alert'>
+                      <div>Your API Key does not have access to Host Pairs data.</div>
+                      <div class="p-footnote mt-1">
+                        You can disable this data source via the integration's "Datasources" option.
+                      </div>
                     </div>
-                  </div>
-                {{else}}
-                  <div>
-                    No Host Pairs Details Found
-                  </div>
+                  {{else}}
+                    <div>
+                      No Host Pairs Details Found
+                    </div>
+                  {{/if}}
                 {{/if}}
               {{/if}}
-            {{/if}}
-          </div>
-        {{/if}}
+            </div>
+          {{/if}}
         {{/if}}
         {{!-- end of pairs --}}
 
@@ -1608,8 +1604,8 @@
                       <span class="p-footnote">Showing first 10 results</span>
                     {{/unless}}
                     <div class='p-footnote mt-1'>This tab only displays articles where the entity
-                    <b>{{block.entity.value}}</b>
-                    is listed as an indicator.</div>
+                      <b>{{block.entity.value}}</b>
+                      is listed as an indicator.</div>
                   {{else if details.articles.accessDenied}}
                     <div class='alert alert-warning'>
                       <div>Your API Key does not have access to the Articles data source.</div>
@@ -1622,9 +1618,9 @@
                       No Articles Found
                     </div>
                     <div>
-                    <div class='p-footnote mt-1'>This tab only displays articles where the entity
-                      <b>{{block.entity.value}}</b>
-                      is listed as an indicator.</div>
+                      <div class='p-footnote mt-1'>This tab only displays articles where the entity
+                        <b>{{block.entity.value}}</b>
+                        is listed as an indicator.</div>
                     </div>
                   {{/if}}
                 {{/if}}
@@ -1635,12 +1631,32 @@
         {{! end of articles }}
 
         {{! start of certs }}
-        {{#if enabledDatasources.sslCertsEnabled}}
+        {{#if enabledDatasources.sslCerts}}
           <div class='sticky-header' {{action 'toggleShowResults' 'certificates'}}>
             <div>
               {{fa-icon icon="certificate" fixedWidth=true class="sticky-header-icon"}}
               SSL Certs
+              {{#if details.certificates.data.length}}
+                {{#if block._state.expanded.certificates}}
+                  ({{details.certificates.data.length}})
+                {{else}}
+                  (10/{{details.certificates.data.length}})
+                {{/if}}
+              {{/if}}
             </div>
+            {{#if (and block._state.visible.certificates (gt details.certificates.data.length 10))}}
+              <div>
+                <span class="header-action" {{action "toggleExpanded" "certificates" bubbles=false}}>
+                  {{#if details.certificates.data.length}}
+                    {{#if block._state.expanded.certificates}}
+                      Show fewer results
+                    {{else}}
+                      Show all results
+                    {{/if}}
+                  {{/if}}
+                </span>
+              </div>
+            {{/if}}
             <div class='p-action'>
               {{fa-icon (if block._state.visible.certificates 'caret-up' 'caret-down') fixedWidth=true}}
             </div>
@@ -1749,7 +1765,7 @@
               {{else}}
                 {{#if block._state.visible.certificates}}
                   {{#if details.certificates.data.length}}
-                    {{#each details.certificates.data as |certificate index|}}
+                    {{#each (take (if block._state.expanded.certificates details.certificates.data.length 10) details.certificates.data) as |certificate index|}}
                       {{#if (gt index 0)}}
                         <hr />
                       {{/if}}
@@ -2533,306 +2549,313 @@
           {{/if}}
         {{/if}}
         {{!-- end of subdomains --}}
-    </div>
-  {{/if}}
-{{/if}}
-
-{{#if (eq block.entity.type 'custom')}}
-  {{! Tracker output parsing}}
-  <div class='view-in-pt'>
-    <a href='https://community.riskiq.com/search/trackers/{{block.entity.value}}'>View in PassiveTotal
-      {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-  </div>
-  <h1 class='p-title'>
-    {{fa-icon 'code' fixedWidth=true}}
-    Google Analytics Tracker Details
-  </h1>
-  {{#each details.tracker as |result index|}}
-    <div class='mb-2'>
-      <div>
-        <span class='p-key'>Entity: </span>
-        <a href='https://community.riskiq.com/search/{{result.entity}}'>{{result.entity}}
-          {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-      </div>
-      <div>
-        <span class='p-key'>First Seen: </span>
-        <span class='p-value'>{{result.firstSeen}}</span>
-      </div>
-      <div>
-        <span class='p-key'>Last Seen: </span>
-        <span class='p-value'>{{result.lastSeen}}</span>
-      </div>
-    </div>
-  {{/each}}
-  {{! view quota }}
-  <div class='mt-1'>
-    <span class='p-action' {{action 'showQuota'}}>
-      {{#if block._state.viewQuota}}
-        Hide Search Quota
-        {{fa-icon icon='chevron-up'}}
-      {{else}}
-        View Search Quota
-        {{fa-icon icon='chevron-down'}}
-      {{/if}}
-    </span>
-    {{#if block._state.searchRunning.quota}}
-      <div class='mt-1'>
-        {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-        Loading Quota ...
       </div>
     {{/if}}
-    {{#if block._state.viewQuota}}
-      {{#if details.quota}}
-        <div class='quota-container mt-1'>
-          {{#if details.quota.user}}
-            <div>
-              <div>
-                <span class='p-title mt-0'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
-              </div>
-              <div>
-                <span class='p-key'>API Searches:</span>
-                <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
-                  of
-                  {{details.quota.user.licenseLimits.searchApi}}
-                  used</span>
-              </div>
-              <div>
-                <span class='p-key'>Quota Duration: </span>
-                <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
-              </div>
-              <div>
-                <span class='p-key'>Next Quota Reset: </span>
-                <span class='p-value'>{{details.quota.user.next_reset}}</span>
-              </div>
-            </div>
-          {{/if}}
-          {{#if details.quota.organization}}
-            <div class='mt-1'>
-              <div>
-                <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
-                  Your Organization Search Quota</span>
-              </div>
-              <div>
-                <span class='p-key'>API Searches: </span>
-                <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
-                  of
-                  {{details.quota.organization.licenseLimits.enterprise.searchApi}}
-                  used</span>
-              </div>
-              <div>
-                <span class='p-key'>Quota Duration:</span>
-                <span>{{details.quota.organization.quotaInterval}}</span>
-              </div>
-              <div>
-                <span class='p-key'>Next Quota Reset: </span>
-                <span class='p-value'>{{details.quota.organization.next_reset}}</span>
-              </div>
-            </div>
-          {{/if}}
-          <span class='reload-quota-btn' {{action 'getQuota'}}>
-            {{fa-icon
-              icon='sync'
-              fixedWidth=true
-              class='icon'
-              title='Refresh Quota'
-              spin=(if block._state.searchRunning.quota true false)
-            }}
-          </span>
-        </div>
-      {{/if}}
-    {{/if}}
-  </div>
-{{/if}}
 
-{{#if (eq activeTab 'pdns')}}
-  {{#if (and block._state.searchRunning.pdns (not block._state.initialLoadAttempted.pdns))}}
-    <div class="loading-text mt-2">
-      {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-      Loading Resolutions
-    </div>
-  {{else if (or
-    details.pdns.isConnectionReset
-    details.pdns.maxRequestQueueLimitHit
-    details.pdns.isGatewayTimeout
-    details.pdns.apiKeyLimitReached
-    details.pdns.onMessageTimeout
-  )}}
-    {{#unless details.pdns.apiKeyLimitReached}}
-      <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'pdns'}}>
-        {{#if block._state.searchRunning.pdns}}
+    {{#if (eq activeTab 'pdns')}}
+      {{#if (and block._state.searchRunning.pdns (not block._state.initialLoadAttempted.pdns))}}
+        <div class="loading-text mt-2">
           {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
-        {{else}}
-          Retry Resolutions Search
-        {{/if}}
-      </button>
-    {{/unless}}
-    <div class='mt-1'>
-      {{#if details.pdns.onMessageTimeout}}
-        <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Resolutions
-          Search" button.</span>
-        <div class='mt-1'>
-          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-            PassiveTotal Web Interface
-            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+          Loading Resolutions
         </div>
-        <div>
+      {{else if (or
+              details.pdns.isConnectionReset
+              details.pdns.maxRequestQueueLimitHit
+              details.pdns.isGatewayTimeout
+              details.pdns.apiKeyLimitReached
+              details.pdns.onMessageTimeout
+      )}}
+        {{#unless details.pdns.apiKeyLimitReached}}
+          <button type='button' class='btn btn-polarity btn-sm retry-btn mt-1' {{action 'retrySearch' 'pdns'}}>
+            {{#if block._state.searchRunning.pdns}}
+              {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+            {{else}}
+              Retry Resolutions Search
+            {{/if}}
+          </button>
+        {{/unless}}
+        <div class='mt-1'>
+          {{#if details.pdns.onMessageTimeout}}
+            <span>The PassiveTotal API took too long to respond. You can retry your search by pressing the "Retry Resolutions
+          Search" button.</span>
+            <div class='mt-1'>
+              <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                PassiveTotal Web Interface
+                {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+            </div>
+            <div>
           <span class='p-footnote'>Some searches via the PassiveTotal API take too long to respond. Click the link to
             run the search via the PassiveTotal website instead.</span>
-        </div>
-      {{else if details.pdns.apiKeyLimitReached}}
-        <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
-          You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
+            </div>
+          {{else if details.pdns.apiKeyLimitReached}}
+            <span>{{fa-icon icon='exclamation-circle' fixedWidth=true class='details-icon'}}
+              You have reached your PassiveTotal API Search Quota. Please view your Search Quota below to determine when you
           will be able to run searches again.</span>
-        <div class='mt-1'>
-          <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
-            PassiveTotal Web Interface
-            {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
-        </div>
-        <div>
+            <div class='mt-1'>
+              <a class='p-link' href='https://community.riskiq.com/research?query={{block.entity.value}}'>Run Search via
+                PassiveTotal Web Interface
+                {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+            </div>
+            <div>
           <span class='p-footnote'>Use the link to run this search via the PassiveTotal website which uses a different
             quota.</span>
-        </div>
-        {{#if details.quota.user}}
-          <div class='mt-1'>
-            <div>
-              <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
             </div>
-            <div>
-              <span class='p-key'>API Searches:</span>
-              <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
-                of
-                {{details.quota.user.licenseLimits.searchApi}}
-                used</span>
-            </div>
-            <div>
-              <span class='p-key'>Quota Duration: </span>
-              <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
-            </div>
-            <div>
-              <span class='p-key'>Next Quota Reset: </span>
-              <span class='p-value'>{{details.quota.user.next_reset}}</span>
-            </div>
-          </div>
-        {{/if}}
-        {{#if details.quota.organization}}
-          <div class='mt-1'>
-            <div>
+            {{#if details.quota.user}}
+              <div class='mt-1'>
+                <div>
+                  <span class='p-title'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+                </div>
+                <div>
+                  <span class='p-key'>API Searches:</span>
+                  <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                    of
+                    {{details.quota.user.licenseLimits.searchApi}}
+                    used</span>
+                </div>
+                <div>
+                  <span class='p-key'>Quota Duration: </span>
+                  <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+                </div>
+                <div>
+                  <span class='p-key'>Next Quota Reset: </span>
+                  <span class='p-value'>{{details.quota.user.next_reset}}</span>
+                </div>
+              </div>
+            {{/if}}
+            {{#if details.quota.organization}}
+              <div class='mt-1'>
+                <div>
               <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
                 Your Organization Search Quota</span>
-            </div>
-            <div>
-              <span class='p-key'>API Searches: </span>
-              <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
-                of
-                {{details.quota.organization.licenseLimits.enterprise.searchApi}}
-                used</span>
-            </div>
-            <div>
-              <span class='p-key'>Quota Duration:</span>
-              <span>{{details.quota.organization.quotaInterval}}</span>
-            </div>
-            <div>
-              <span class='p-key'>Next Quota Reset: </span>
-              <span class='p-value'>{{details.quota.organization.next_reset}}</span>
-            </div>
-          </div>
-        {{/if}}
-      {{else}}
-        <div class='mt-1'>
+                </div>
+                <div>
+                  <span class='p-key'>API Searches: </span>
+                  <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                    of
+                    {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                    used</span>
+                </div>
+                <div>
+                  <span class='p-key'>Quota Duration:</span>
+                  <span>{{details.quota.organization.quotaInterval}}</span>
+                </div>
+                <div>
+                  <span class='p-key'>Next Quota Reset: </span>
+                  <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+                </div>
+              </div>
+            {{/if}}
+          {{else}}
+            <div class='mt-1'>
           <span>A temporary PassiveTotal API search limit was reached. You can retry your search by pressing the "Retry
             Resolutions Search" button.</span>
+            </div>
+          {{/if}}
         </div>
-      {{/if}}
-    </div>
-  {{else}}
-    {{#if (gt resolutions.length 0)}}
-      <div class="mt-1 resolutions-filter">
-        <div class="input-group">
-          {{input
-            type="text"
-            class="form-control"
-            placeholder="Filter resolutions"
-            enter=(action "filterResolutions")
-            value=block._state.resolutions.shadowFilter
-          }}
-          <PButton @naked={{true}} class="clear-filter" {{action "clearResolutionFilter"}} disabled={{eq block._state.resolutions.shadowFilter.length 0}}>
-            <FaIcon @icon="times" />
-          </PButton>
-          <div class="input-group-append">
-            <button {{action "filterResolutions"}} class="btn btn-outline-secondary" type="button" disabled={{eq block._state.resolutions.shadowFilter.length 0}}>Filter</button>
+      {{else}}
+        {{#if (gt resolutions.length 0)}}
+          <div class="mt-1 resolutions-filter">
+            <div class="input-group">
+              {{input
+                      type="text"
+                      class="form-control"
+                      placeholder="Filter resolutions"
+                      enter=(action "filterResolutions")
+                      value=block._state.resolutions.shadowFilter
+              }}
+              <PButton @naked={{true}} class="clear-filter" {{action "clearResolutionFilter"}} disabled={{eq block._state.resolutions.shadowFilter.length 0}}>
+                <FaIcon @icon="times" />
+              </PButton>
+              <div class="input-group-append">
+                <button {{action "filterResolutions"}} class="btn btn-outline-secondary" type="button" disabled={{eq block._state.resolutions.shadowFilter.length 0}}>Filter</button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="mt-1 d-flex align-items-center justify-space-between resolutions-sorting">
-        <select
-          class="form-control"
-          onchange={{action (mut block._state.resolutions.sortValue) value="target.value"}}
-          disabled={{ticketClosed}}
-        >
-          {{#each resolutionSortOptions as |sortOption|}}
-            <option class="dropdown-option" selected={{eq block._state.resolutions.sortValue sortOption.value}} value={{sortOption.value}}>
-              {{sortOption.display}}
-            </option>
-          {{/each}}
-        </select>
-        <select
-          class="form-control"
-          onchange={{action (mut block._state.resolutions.sortOrder) value="target.value"}}
-          disabled={{ticketClosed}}
-        >
-          {{#each resolutionSortOrderOptions as |sortOption|}}
-            <option class="dropdown-option" selected={{eq block._state.resolutions.sortOrder sortOption}} value={{sortOption}}>
-              {{sortOption}}
-            </option>
-          {{/each}}
-        </select>
-      </div>
-      <table class="resolutions p-table">
-        <thead>
-          <th class="resolution">Resolution</th>
-          <th class="date">Timestamps</th>
-        </thead>
-        <tbody>
-          {{#each resolutions as |pdns index|}}
-            <tr>
-              <td class="resolution">{{pdns.resolve}}</td>
-              <td class="date">
-                <div title="{{pdns.lastSeen}}"><span class="time">Last Seen</span> {{moment-format pdns.lastSeen "YYYY-MM-DD" timeZone=timezone}}</div>
-                <div title="{{pdns.firstSeen}}"><span class="time">First Seen</span> {{moment-format pdns.firstSeen "YYYY-MM-DD" timeZone=timezone}}</div>
-                <div title="{{pdns.collected}}"><span class="time">Collected</span> {{moment-format pdns.collected "YYYY-MM-DD" timeZone=timezone}}</div>
-              </td>
-            </tr>
-          {{/each}}
-        {{#if (eq resolutions.length 0)}}
-          <tr>
-            <td class="resolution">No results</td>
-            <td>&nbsp;</td>
-          </tr>
+          <div class="mt-1 d-flex align-items-center justify-space-between resolutions-sorting">
+            <select
+                    class="form-control"
+                    onchange={{action (mut block._state.resolutions.sortValue) value="target.value"}}
+                    disabled={{ticketClosed}}
+            >
+              {{#each resolutionSortOptions as |sortOption|}}
+                <option class="dropdown-option" selected={{eq block._state.resolutions.sortValue sortOption.value}} value={{sortOption.value}}>
+                  {{sortOption.display}}
+                </option>
+              {{/each}}
+            </select>
+            <select
+                    class="form-control"
+                    onchange={{action (mut block._state.resolutions.sortOrder) value="target.value"}}
+                    disabled={{ticketClosed}}
+            >
+              {{#each resolutionSortOrderOptions as |sortOption|}}
+                <option class="dropdown-option" selected={{eq block._state.resolutions.sortOrder sortOption}} value={{sortOption}}>
+                  {{sortOption}}
+                </option>
+              {{/each}}
+            </select>
+          </div>
+          <table class="resolutions p-table">
+            <thead>
+            <th class="resolution">Resolution</th>
+            <th class="date">Timestamps</th>
+            </thead>
+            <tbody>
+            {{#each resolutions as |pdns index|}}
+              <tr>
+                <td class="resolution">{{pdns.resolve}}</td>
+                <td class="date">
+                  <div title="{{pdns.lastSeen}}"><span class="time">Last Seen</span> {{moment-format pdns.lastSeen "YYYY-MM-DD" timeZone=timezone}}</div>
+                  <div title="{{pdns.firstSeen}}"><span class="time">First Seen</span> {{moment-format pdns.firstSeen "YYYY-MM-DD" timeZone=timezone}}</div>
+                  <div title="{{pdns.collected}}"><span class="time">Collected</span> {{moment-format pdns.collected "YYYY-MM-DD" timeZone=timezone}}</div>
+                </td>
+              </tr>
+            {{/each}}
+            {{#if (eq resolutions.length 0)}}
+              <tr>
+                <td class="resolution">No results</td>
+                <td>&nbsp;</td>
+              </tr>
+            {{/if}}
+            </tbody>
+          </table>
+          <div class="paging-container mt-1 d-flex align-items-center justify-content-between">
+            <div>
+              <span class="next-hit-stats">Resolutions {{block._state.resolutions.startItem}} to {{block._state.resolutions.endItem}} of {{block._state.resolutions.filteredTotal}}</span>
+            </div>
+            <div>
+              <span title="First Page" {{action "setPage" "firstPage"}} class="next-hit-button p-action">{{fa-icon icon="chevron-double-left" fixedWidth=true}}</span>
+              <span title="Previous Page" {{action "setPage" -1}} class="next-hit-button p-action">{{fa-icon icon="chevron-left" fixedWidth=true}}</span>
+              <span title="Next Page" {{action "setPage" 1}} class="next-hit-button ml-1 p-action">{{fa-icon icon="chevron-right" fixedWidth=true}}</span>
+              <span title="Last Page" {{action "setPage" "lastPage"}} class="next-hit-button ml-1 p-action">{{fa-icon icon="chevron-double-right" fixedWidth=true}}</span>
+            </div>
+          </div>
+        {{else if details.resolutions.accessDenied}}
+          <div class='alert alert-warning mt-2' role='alert'>
+            <div>Your API Key does not have access to the Resolutions data.</div>
+            <div class="p-footnote mt-1">
+              You can disable this data source via the integration's "Datasources" option.
+            </div>
+          </div>
+        {{else}}
+          <div class='alert alert-info mt-2' role='alert'>
+            No Resolutions Found
+          </div>
         {{/if}}
-        </tbody>
-      </table>
-      <div class="paging-container mt-1 d-flex align-items-center justify-content-between">
-        <div>
-          <span class="next-hit-stats">Resolutions {{block._state.resolutions.startItem}} to {{block._state.resolutions.endItem}} of {{block._state.resolutions.filteredTotal}}</span>
-        </div>
-        <div>
-          <span title="First Page" {{action "setPage" "firstPage"}} class="next-hit-button p-action">{{fa-icon icon="chevron-double-left" fixedWidth=true}}</span>
-          <span title="Previous Page" {{action "setPage" -1}} class="next-hit-button p-action">{{fa-icon icon="chevron-left" fixedWidth=true}}</span>
-          <span title="Next Page" {{action "setPage" 1}} class="next-hit-button ml-1 p-action">{{fa-icon icon="chevron-right" fixedWidth=true}}</span>
-          <span title="Last Page" {{action "setPage" "lastPage"}} class="next-hit-button ml-1 p-action">{{fa-icon icon="chevron-double-right" fixedWidth=true}}</span>
-        </div>
-      </div>
-    {{else if details.resolutions.accessDenied}}
-      <div class='alert alert-warning mt-2' role='alert'>
-        <div>Your API Key does not have access to the Resolutions data.</div>
-        <div class="p-footnote mt-1">
-          You can disable this data source via the integration's "Datasources" option.
-        </div>
-      </div>
-    {{else}}
-      <div class='alert alert-info mt-2' role='alert'>
-        No Resolutions Found
-      </div>
+      {{/if}}
     {{/if}}
   {{/if}}
+
+  {{#if (eq block.entity.type 'custom')}}
+  {{! Tracker output parsing}}
+    <div class='view-in-pt'>
+      <a href='https://community.riskiq.com/search/trackers/{{block.entity.value}}'>View in PassiveTotal
+        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+    </div>
+    <h1 class='p-title'>
+      {{fa-icon icon="code" fixedWidth=true}}
+      Google Analytics Tracker Details
+    </h1>
+    {{#if (eq details.tracker.length 0)}}
+      <div>No tracker details found</div>
+    {{/if}}
+    <div class="scrollable-block padded">
+      {{#each details.tracker as |result index|}}
+        <div class='mb-2'>
+          <div>
+            <span class='p-key'>Entity: </span>
+            <a href='https://community.riskiq.com/search/{{result.entity}}'>{{result.entity}}
+              {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+          </div>
+          <div>
+            <span class='p-key'>First Seen: </span>
+            <span class='p-value'>{{result.firstSeen}}</span>
+          </div>
+          <div>
+            <span class='p-key'>Last Seen: </span>
+            <span class='p-value'>{{result.lastSeen}}</span>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+    {{! view quota }}
+    <div class='mt-1'>
+      <span class='p-action' {{action 'showQuota'}}>
+        {{#if block._state.viewQuota}}
+          Hide Search Quota
+          {{fa-icon icon='chevron-up'}}
+        {{else}}
+          View Search Quota
+          {{fa-icon icon='chevron-down'}}
+        {{/if}}
+      </span>
+      {{#if block._state.searchRunning.quota}}
+        <div class='mt-1'>
+          {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+          Loading Quota ...
+        </div>
+      {{/if}}
+      {{#if block._state.viewQuota}}
+        {{#if details.quota}}
+          <div class='quota-container mt-1'>
+            {{#if details.quota.user}}
+              <div>
+                <div>
+                  <span class='p-title mt-0'>{{fa-icon icon='user' fixedWidth=true}} Your User Search Quota</span>
+                </div>
+                <div>
+                  <span class='p-key'>API Searches:</span>
+                  <span class='p-value'>{{details.quota.user.licenseCounts.searchApi}}
+                    of
+                    {{details.quota.user.licenseLimits.searchApi}}
+                    used</span>
+                </div>
+                <div>
+                  <span class='p-key'>Quota Duration: </span>
+                  <span class='p-value'>{{details.quota.user.quotaInterval}}</span>
+                </div>
+                <div>
+                  <span class='p-key'>Next Quota Reset: </span>
+                  <span class='p-value'>{{details.quota.user.next_reset}}</span>
+                </div>
+              </div>
+            {{/if}}
+            {{#if details.quota.organization}}
+              <div class='mt-1'>
+                <div>
+                <span class='p-title mt-0'>{{fa-icon icon='building' fixedWidth=true}}
+                  Your Organization Search Quota</span>
+                </div>
+                <div>
+                  <span class='p-key'>API Searches: </span>
+                  <span class='p-value'>{{details.quota.organization.licenseCounts.enterprise.searchApi}}
+                    of
+                    {{details.quota.organization.licenseLimits.enterprise.searchApi}}
+                    used</span>
+                </div>
+                <div>
+                  <span class='p-key'>Quota Duration:</span>
+                  <span>{{details.quota.organization.quotaInterval}}</span>
+                </div>
+                <div>
+                  <span class='p-key'>Next Quota Reset: </span>
+                  <span class='p-value'>{{details.quota.organization.next_reset}}</span>
+                </div>
+              </div>
+            {{/if}}
+            <span class='reload-quota-btn' {{action 'getQuota'}}>
+              {{fa-icon
+                      icon='sync'
+                      fixedWidth=true
+                      class='icon'
+                      title='Refresh Quota'
+                      spin=(if block._state.searchRunning.quota true false)
+              }}
+            </span>
+          </div>
+        {{/if}}
+      {{/if}}
+    </div>
+  {{/if}}
 {{/if}}
+

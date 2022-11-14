@@ -196,7 +196,7 @@ polarity.export = PolarityComponent.extend({
   malwareIsLoaded: Ember.computed('details.malware.data', function () {
     return Array.isArray(this.get('details.malware.data'));
   }),
-  pdnsIsLoaded: Ember.computed('details.pdns', function () {
+  pdnsIsLoaded: Ember.computed('details.pdns.data.pdnsData', function () {
     return Array.isArray(this.get('details.pdns.data.pdnsData'));
   }),
   setInitialLoadAttempted(type) {

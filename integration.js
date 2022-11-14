@@ -158,7 +158,7 @@ function createLookupResultObject(result, options) {
     return {
       entity: result.entity,
       data: {
-        summary: ['Trackers:' + result.body.results.length],
+        summary: ['Trackers: ' + result.body.results.length],
         details: {
           tracker: result.body.results
         }
@@ -607,7 +607,7 @@ function onMessage(payload, options, cb) {
           () => {
             return {
               pdnsData: resolutions,
-              totalRecords: pdns.body.results.length
+              totalRecords: resolutions.length
             };
           },
           options,
