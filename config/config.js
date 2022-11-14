@@ -123,16 +123,6 @@ module.exports = {
       adminOnly: false
     },
     {
-      key: 'records',
-      name: 'Maximum Number of Associated Records to Return',
-      description:
-        'Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return',
-      default: 100,
-      type: 'number',
-      userCanEdit: true,
-      adminOnly: false
-    },
-    {
       key: 'enabledDatasources',
       name: 'Enabled Datasources',
       description: 'Select which datasources are enabled.  Certain datasources require an enterprise key.  This option should be set to "Users can view only"',
@@ -215,6 +205,16 @@ module.exports = {
       ],
       multiple: true,
       userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'records',
+      name: 'Maximum Number of Associated Records to Return',
+      description:
+          'Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Defaults to 100.',
+      default: 100,
+      type: 'number',
+      userCanEdit: true,
       adminOnly: false
     },
     {
