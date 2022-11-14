@@ -34,19 +34,13 @@ PassiveTotal Username, used to access the API.
 ### RiskIQ Community (PassiveTotal) ApiKey
 PassiveTotal API Key
 
-### Number of Associated Records to Return
-Total number of associated Malware and OSINT records to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Default is set to 10.
+### Enabled Datasources
 
-### Search Historical WHOIS Data 
-If checked the API will query historical WHOIS data. Only the first 10 records will be displayed. 
+Select which datasources are enabled. Certain datasources require an enterprise key. This option should be set to "Users can view only"
 
-### Enable Reputation Lookup
+### Maximum Number of Associated Records to Return
 
-If checked, the integration will perform an optional onDetails API request to retrieve the entity reputation details. This option requires additional privileged API access.
-
-### Enable Host Pairs Lookup
-
-If checked, the integration will perform an optional onDetails API request to retrieve the entity host pairs details. This option requires additional privileged API access.
+Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return.  Defaults to 100.
 
 ### Ignore List
 List of domains that you never want to send to PassiveTotal.
@@ -70,6 +64,18 @@ Minimum amount of time in milliseconds between each entity search (defaults to 5
 ### Data Card
 
 Returns a count of available data for various OSINT sources including a link to view the data in PassiveTotal. The Data Card also includes a drop down to view your current PassiveTotal API Search Quota based on the provide API key option.
+
+### Services/Ports
+
+Allows you to see services on recently open ports for an IP Address.
+
+### OSINT
+
+Searches open source intelligences sources
+
+### Subdomains
+
+Returns subdomains of the given domain 
 
 ### Articles
 
@@ -95,7 +101,7 @@ This tab will display any associated Malware.
 
 This tab will display WHOIS information for the entity.
 
-### Resolution/PDNS
+### Resolutions
 
 This tab will display Passive DNS information for the given  IP or domain.
 
@@ -111,7 +117,7 @@ If you reach your PassiveTotal API Search Quota you will see a message informing
 
 ### Timeouts
 
-The Polarity Server requires that APIs respond within 15 seconds.
+The Polarity Server requires that APIs respond within 30 seconds.
 
 The PassiveTotal API can sometimes take longer than this to respond to a request.  When this happens you will see a timeout message and be given the option to rerun the search.  The timeout message will also provide a link to run the search from the PassiveTotal web search interface.
 
