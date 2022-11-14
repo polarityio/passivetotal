@@ -1,12 +1,13 @@
 'use strict';
 
-const request = require('request');
+const request = require('postman-request');
 const _ = require('lodash');
 const { flow, get, getOr, slice, orderBy, concat, uniqWith, isEqual } = require('lodash/fp');
 const Bottleneck = require('bottleneck');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
+const { whoisTemplate, computeHistoricalWhoisDiff } = require('./lib/whois');
 
 let Logger;
 let limiter = null;
@@ -182,7 +183,7 @@ function doLookup(entities, options, cb) {
     _setupLimiter(options);
   }
 
-  Logger.debug(entities);
+  Logger.trace({ entities }, 'doLookup');
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
@@ -281,8 +282,20 @@ function reachedSearchLimit(err, result) {
 
   let statusCode = _.get(err, 'statusCode', 0);
   const isGatewayTimeout = statusCode === 502 || statusCode === 504 || statusCode === 500;
+  // PassiveTotal returns a 429 when you hit your API lookup limit
   const apiKeyLimitReached = statusCode === 429;
   const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
+
+  Logger.trace(
+    {
+      statusCode,
+      maxRequestQueueLimitHit,
+      isConnectionReset,
+      isGatewayTimeout,
+      apiKeyLimitReached
+    },
+    'checking search limit'
+  );
 
   if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout || apiKeyLimitReached) {
     return {
@@ -312,7 +325,7 @@ function handleRestError(error, entity, res, body) {
   let result;
 
   if (error) {
-    Logger.error({ error }, 'we got an error');
+    Logger.error({ error }, 'Handling HTTP Request Error');
     return {
       error: error,
       detail: 'HTTP Request Error'
@@ -332,10 +345,13 @@ function handleRestError(error, entity, res, body) {
       }
     };
   } else if (res.statusCode === 402) {
+    // Note that a 402 means the user's API Key does not have permission to use the requested endpoint.  This
+    // is different than a 429 which means the user's API key has hit it's lookup limit
     result = {
       error: {
-        detail: 'Quota Exceeded',
-        msg: body.message
+        detail: 'Missing API Permissions',
+        msg: body.message,
+        accessDenied: true
       }
     };
   } else {
@@ -433,15 +449,19 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
       });
     });
   } else if (err) {
+    Logger.error({ err }, 'Error running onMessage');
     return cb(err);
   } else {
-    cb(null, {
+    const onMessageReturnData = {
       data: getDataHandler()
-    });
+    };
+    Logger.trace({ onMessageReturnData }, 'onMessage Return Data');
+    cb(null, onMessageReturnData);
   }
 }
 
 function onMessage(payload, options, cb) {
+  Logger.trace({ payload }, 'onMessage Received');
   const entity = payload.entity;
 
   switch (payload.searchType) {
@@ -487,12 +507,12 @@ function onMessage(payload, options, cb) {
           onMessageResultHandler(
             err,
             services,
-            () =>
-              getBodyWithResults({
-                body: {
-                  results: { servicesData: services.body.results, totalRecords: services.body.totalRecords }
-                }
-              }),
+            () => {
+              return {
+                services: services.body.results,
+                totalRecords: services.body.totalRecords
+              };
+            },
             options,
             cb
           );
@@ -500,7 +520,7 @@ function onMessage(payload, options, cb) {
       );
       break;
     case 'whois':
-      const qs = options.searchHistorical ? { query: entity.value, history: true } : { query: entity.value };
+      const qs = { query: entity.value, history: true };
       doDetailsLookup(
         {
           path: '/v2/whois',
@@ -509,26 +529,40 @@ function onMessage(payload, options, cb) {
         entity,
         options,
         (err, whois) => {
-          if (options.searchHistorical) {
-            const responseWithHistoricalData = whois.body.results.slice(0, 10);
-            Logger.trace(responseWithHistoricalData, 'responseWithHistoricalData');
+          Logger.trace({ whois }, 'Whois Raw Results');
 
-            onMessageResultHandler(
-              err,
-              whois,
-              () =>
-                getBodyWithResults({
-                  body: { results: { whoisData: responseWithHistoricalData, totalRecords: whois.body.totalRecords } }
-                }),
-              options,
-              cb
-            );
+          let totalRecords = 0;
+          let whoisData = null;
+
+          // If the results are an array, then we have historical whois data available
+          if (!Array.isArray(whois.body.results)) {
+            delete whois.body.rawText;
+            whoisData = [whois.body];
+            totalRecords = 1;
           } else {
-            Logger.trace({ whois }, 'whois');
-            //When the request for whois data is made with history = true, the response is an array of objects, opposed to a single object,
-            //to avoid having to manage the different response shapes, we put the body of the response for single object in an array.
-            onMessageResultHandler(err, whois, () => getBody({ body: { whoisData: [whois.body] } }), options, cb);
+            whoisData = whois.body.results.map((record) => {
+              delete record.rawText;
+              return record;
+            });
+            totalRecords = whois.body.totalRecords;
           }
+
+          // Compute the historical diff information which we use in the front end template
+          whoisData = computeHistoricalWhoisDiff(whoisData, Logger);
+          Logger.trace({whoisData}, 'Whois Data');
+          onMessageResultHandler(
+            err,
+            whois,
+            () => {
+              return {
+                whoisData,
+                whoisTemplate,
+                totalRecords
+              };
+            },
+            options,
+            cb
+          );
         }
       );
       break;
@@ -542,34 +576,40 @@ function onMessage(payload, options, cb) {
         options,
         (err, osint) => {
           Logger.trace({ osint }, 'osint Lookup');
-
-          onMessageResultHandler(
-            err,
-            osint,
-            () =>
-              getBodyWithResults({
-                body: { results: { osintData: osint.body.results } }
-              }),
-            options,
-            cb
-          );
+          onMessageResultHandler(err, osint, () => getRecords(options.records, osint), options, cb);
         }
       );
       break;
     case 'pdns':
       doDetailsLookup({ path: '/v2/dns/passive', qs: { query: entity.value } }, entity, options, (err, pdns) => {
-        Logger.trace({ PDNS: pdns });
-        const resolutions = orderBy('lastSeen', 'asc', pdns.body.results.slice(0, options.records));
+        const resolutions = orderBy(
+          'lastSeenSeconds',
+          'desc',
+          pdns.body.results.map((dns) => {
+            // slim down the return result
+            return {
+              resolve: dns.resolve.toLowerCase(), // lowercase to make it easier to filter on front end
+              firstSeen: dns.firstSeen,
+              firstSeenSeconds: new Date(dns.firstSeen).getTime() / 1000, // used for fast sorting on integers
+              lastSeen: dns.lastSeen,
+              lastSeenSeconds: new Date(dns.lastSeen).getTime() / 1000,
+              collected: dns.collected,
+              collectedSeconds: new Date(dns.collected).getTime() / 1000
+            };
+          })
+        );
+
+        Logger.trace({ resolutions }, 'Processed Resolutions');
 
         onMessageResultHandler(
           err,
           pdns,
-          () =>
-            getBodyWithResults({
-              body: {
-                results: { pdnsData: resolutions, totalRecords: pdns.body.results.length }
-              }
-            }),
+          () => {
+            return {
+              pdnsData: resolutions,
+              totalRecords: pdns.body.results.length
+            };
+          },
           options,
           cb
         );
@@ -637,6 +677,7 @@ function onMessage(payload, options, cb) {
               });
             });
           } else if (err) {
+            Logger.error({ err }, 'Error fetching Host Pairs');
             return cb(err);
           } else {
             cb(null, {
@@ -669,6 +710,7 @@ function onMessage(payload, options, cb) {
         }
       );
       break;
+    // Note: Does not appear to be used
     case 'articlesById':
       doDetailsLookup({ path: `/v2/articles/${payload.id}` }, entity, options, (err, article) => {
         onMessageResultHandler(err, article, () => article, options, cb);

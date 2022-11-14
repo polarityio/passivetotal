@@ -124,41 +124,97 @@ module.exports = {
     },
     {
       key: 'records',
-      name: 'Number of Associated Records to Return',
+      name: 'Maximum Number of Associated Records to Return',
       description:
-        'Total number of Malware and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return',
-      default: 10,
+        'Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return',
+      default: 100,
       type: 'number',
       userCanEdit: true,
       adminOnly: false
     },
     {
-      key: 'searchHistorical',
-      name: 'WHOIS historical data',
-      description: 'Ability to search WHOIS historical data',
-      default: false,
-      type: 'boolean',
+      key: 'enabledDatasources',
+      name: 'Enabled Datasources',
+      description: 'Select which datasources are enabled.  Certain datasources require an enterprise key.  This option should be set to "Users can view only"',
+      default: [
+        {
+          value: 'resolutions',
+          display: 'Resolutions'
+        },
+        {
+          value: 'malware',
+          display: 'Malware'
+        },
+        {
+          value: 'services',
+          display: 'Services/Ports'
+        },
+        {
+          value: 'hostPairs',
+          display: 'Host Pairs'
+        },
+        {
+          value: 'reputation',
+          display: 'Reputation'
+        },
+        {
+          value: 'articles',
+          display: 'Articles'
+        },
+        {
+          value: 'sslCerts',
+          display: 'SSL Certs'
+        },
+        {
+          value: 'osint',
+          display: 'OSINT'
+        },
+        {
+          value: 'subdomains',
+          display: 'Subdomains'
+        }
+      ],
+      type: 'select',
+      options: [
+        {
+          value: 'resolutions',
+          display: 'Resolutions'
+        },
+        {
+          value: 'malware',
+          display: 'Malware'
+        },
+        {
+          value: 'services',
+          display: 'Services/Ports'
+        },
+        {
+          value: 'hostPairs',
+          display: 'Host Pairs'
+        },
+        {
+          value: 'reputation',
+          display: 'Reputation'
+        },
+        {
+          value: 'articles',
+          display: 'Articles'
+        },
+        {
+          value: 'sslCerts',
+          display: 'SSL Certs'
+        },
+        {
+          value: 'osint',
+          display: 'OSINT'
+        },
+        {
+          value: 'subdomains',
+          display: 'Subdomains'
+        }
+      ],
+      multiple: true,
       userCanEdit: false,
-      adminOnly: true
-    },
-    {
-      key: 'enableRep',
-      name: 'Enable Reputation Lookup',
-      description:
-        'If checked, the integration will perform an optional onDetails API request to retrieve the entity reputation details.  This option requires additional privileged API access.',
-      default: false,
-      type: 'boolean',
-      userCanEdit: true,
-      adminOnly: false
-    },
-    {
-      key: 'enablePairs',
-      name: 'Enable Host Pairs Lookup',
-      description:
-        'If checked, the integration will perform an optional onDetails API request to retrieve the entity host pairs details.  This option requires additional privileged API access.',
-      default: false,
-      type: 'boolean',
-      userCanEdit: true,
       adminOnly: false
     },
     {
