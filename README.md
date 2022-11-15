@@ -24,6 +24,7 @@ The following REST API endpoints are used by the integration.
 
 ### IPv4 and Domain
 
+```
 https://api.passivetotal.org/v2/cards/summary 
 https://api.passivetotal.org/v2/articles (on details) 
 https://api.passivetotal.org/v2/whois (on details) 
@@ -34,13 +35,16 @@ https://api.passivetotal.org/v2/reputation (on details)
 https://api.passivetotal.org/v2/enrichment/subdomains (on details)
 https://api.passivetotal.org/v2/enrichment/malware (on details)  
 https://api.passivetotal.org/v2/enrichment/osint (on details)
-
-### Google Tracker ID's 
+```
+### Google Tracker ID's
+```
 https://api.passivetotal.org/v2/trackers/search
+```
 
 ### All types
-
-https://api.passivetotal.org/v2/account/quota 
+```
+https://api.passivetotal.org/v2/account/quota
+``` 
 
 ## RiskIQ Community (PassiveTotal) Integration Options
 
