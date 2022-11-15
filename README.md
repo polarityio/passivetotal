@@ -22,8 +22,18 @@ Check out the integration in action:
 
 | Entity Type | REST API Endpoints Searched |
 |------------|-----------------------------|
-| IPv4 and Domain | https://api.passivetotal.org/v2/cards/summary <br> https://api.passivetotal.org/v2/enrichment/malware (on details) <br> https://api.passivetotal.org/v2/enrichment/osint (on details)|
+| IPv4 and Domain | https://api.passivetotal.org/v2/cards/summary <br>
+                    https://api.passivetotal.org/v2/articles (on details) <br>
+                    https://api.passivetotal.org/v2/whois (on details) <br>
+                    https://api.passivetotal.org/v2/dns/passive (on details) <br>
+                    https://api.passivetotal.org/v2/ssl-certificates/search (on details) <br>
+                    https://api.passivetotal.org/v2/host-attributes/pairs (on details) <br>
+                    https://api.passivetotal.org/v2/reputation (on details) <br>
+                    https://api.passivetotal.org/v2/enrichment/subdomains (on details) <br
+                    https://api.passivetotal.org/v2/enrichment/malware (on details) <br> 
+                    https://api.passivetotal.org/v2/enrichment/osint (on details)|
 | Google Tracker ID's | https://api.passivetotal.org/v2/trackers/search |
+| All types | https://api.passivetotal.org/v2/account/quota  |
 
 ## RiskIQ Community (PassiveTotal) Integration Options
 
