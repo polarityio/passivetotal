@@ -12,16 +12,39 @@ To learn more about RiskIQ Community (PassiveTotal), please visit the [official 
 
 Check out the integration in action:
 
-| ![search quota](images/overlay-domain.png) | ![search quota on OSINT tab](images/overlay-tracker.png) |
-|---|--|
-|*PassiveTotal Domain Lookup* | *PassiveTotal Google Tracker lookup* |
+| ![search quota](images/overlay-datacard.png) | ![search quota](images/overlay-resolutions.png) | ![search quota on OSINT tab](images/overlay-tracker.png) |
+|---|--|--|
+|*PassiveTotal Domain Lookup* | *Resolutions* |*PassiveTotal Google Tracker lookup* |
+| ![search quota](images/overlay-whois.png) | ![search quota](images/overlay-whois-diff.png) | &nbsp; |
+|*WHOIS History View* | *WHOIS Diff View* | &nbsp;|
 
-## RiskIQ Community (PassiveTotal) Requests
+## RiskIQ Community (PassiveTotal) API Request Endpoints
 
-| Entity Type | REST API Endpoints Searched |
-|------------|-----------------------------|
-| IPv4 and Domain | https://api.passivetotal.org/v2/cards/summary <br> https://api.passivetotal.org/v2/enrichment/malware (on details) <br> https://api.passivetotal.org/v2/enrichment/osint (on details)|
-| Google Tracker ID's | https://api.passivetotal.org/v2/trackers/search |
+The following REST API endpoints are used by the integration.
+
+### IPv4 and Domain
+
+```
+https://api.passivetotal.org/v2/cards/summary 
+https://api.passivetotal.org/v2/articles (on details) 
+https://api.passivetotal.org/v2/whois (on details) 
+https://api.passivetotal.org/v2/dns/passive (on details) 
+https://api.passivetotal.org/v2/ssl-certificates/search (on details) 
+https://api.passivetotal.org/v2/host-attributes/pairs (on details) 
+https://api.passivetotal.org/v2/reputation (on details) 
+https://api.passivetotal.org/v2/enrichment/subdomains (on details)
+https://api.passivetotal.org/v2/enrichment/malware (on details)  
+https://api.passivetotal.org/v2/enrichment/osint (on details)
+```
+### Google Tracker ID's
+```
+https://api.passivetotal.org/v2/trackers/search
+```
+
+### All types
+```
+https://api.passivetotal.org/v2/account/quota
+``` 
 
 ## RiskIQ Community (PassiveTotal) Integration Options
 

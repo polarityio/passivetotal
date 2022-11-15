@@ -444,7 +444,7 @@ function onMessageResultHandler(err, data, getDataHandler, options, cb) {
         Logger.error(err, 'Error fetching user quota');
       }
       cb(null, {
-        data: searchLimitObject,
+        ...searchLimitObject,
         quota
       });
     });
@@ -672,7 +672,7 @@ function onMessage(payload, options, cb) {
                 Logger.error(err, 'Error fetching user quota');
               }
               cb(null, {
-                data: searchLimitObjectParent || searchLimitObjectChild,
+                ... (searchLimitObjectParent || searchLimitObjectChild),
                 quota
               });
             });
