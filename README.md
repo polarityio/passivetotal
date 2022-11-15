@@ -15,6 +15,8 @@ Check out the integration in action:
 | ![search quota](images/overlay-datacard.png) | ![search quota](images/overlay-resolutions.png) | ![search quota on OSINT tab](images/overlay-tracker.png) |
 |---|--|--|
 |*PassiveTotal Domain Lookup* | *Resolutions* |*PassiveTotal Google Tracker lookup* |
+| ![search quota](images/overlay-whois.png) | ![search quota](images/overlay-whois-diff.png) | &nbsp; |
+|*WHOIS History View* | *WHOIS Diff View* | &nbsp;|
 
 ## RiskIQ Community (PassiveTotal) Requests
 
