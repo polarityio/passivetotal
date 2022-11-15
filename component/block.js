@@ -324,7 +324,8 @@ polarity.export = PolarityComponent.extend({
         this.set('errorMessage', '');
         this.set(`details.${searchType}.accessDenied`, false);
         this.set(`details.${searchType}.onMessageTimeout`, false);
-        this.set(`details.${searchType}.data`, result.data);
+        const typeDetails = this.get(`details.${searchType}`);
+        this.set(`details.${searchType}`, Object.assign({}, typeDetails, result));
         // Note that quota won't always be defined.  We only return the quota if we ran into a search limit error
         this.set(`details.quota`, result.quota);
       })
