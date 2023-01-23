@@ -2,10 +2,7 @@
   "name": "RiskIQ Community (PassiveTotal)",
   "acronym": "PT",
   "description": "RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.",
-  "entityTypes": [
-    "domain",
-    "IPv4"
-  ],
+  "entityTypes": ["domain", "IPv4"],
   "customTypes": [
     {
       "key": "trackerId",
@@ -13,10 +10,8 @@
     }
   ],
   "onDemandOnly": true,
-  "styles": [
-    "./styles/pt.less"
-  ],
-  "defaultColor": "light-blue",
+  "styles": ["./styles/pt.less"],
+  "defaultColor": "light-gray",
   "block": {
     "component": {
       "file": "./component/block.js"
