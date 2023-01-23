@@ -1,0 +1,210 @@
+{
+  "name": "RiskIQ Community (PassiveTotal)",
+  "acronym": "PT",
+  "description": "RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.",
+  "entityTypes": ["domain", "IPv4"],
+  "customTypes": [
+    {
+      "key": "trackerId",
+      "regex": "UA-[0-9]{4,9}(-[0-9]{1,4})?"
+    }
+  ],
+  "onDemandOnly": true,
+  "styles": ["./styles/pt.less"],
+  "defaultColor": "light-gray",
+  "block": {
+    "component": {
+      "file": "./component/block.js"
+    },
+    "template": {
+      "file": "./templates/block.hbs"
+    }
+  },
+  "summary": {
+    "component": {
+      "file": "./component/summary.js"
+    },
+    "template": {
+      "file": "./templates/summary.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "host",
+      "name": "RiskIQ Community (PassiveTotal) API URL",
+      "description": "The URL of the RiskIQ Community (PassiveTotal) API including the schema (i.e., https://)",
+      "default": "https://api.passivetotal.org",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "user",
+      "name": "API Username",
+      "description": "Valid RiskIQ Community (PassiveTotal) Username",
+      "default": "",
+      "type": "text",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "apiKey",
+      "name": "API Key",
+      "description": "Valid RiskIQ Community (PassiveTotal) API Key",
+      "default": "",
+      "type": "password",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "enabledDatasources",
+      "name": "Enabled Datasources",
+      "description": "Select which datasources are enabled.  Certain datasources require an enterprise key.  This option should be set to \"Users can view only\"",
+      "default": [
+        {
+          "value": "resolutions",
+          "display": "Resolutions"
+        },
+        {
+          "value": "malware",
+          "display": "Malware"
+        },
+        {
+          "value": "services",
+          "display": "Services/Ports"
+        },
+        {
+          "value": "hostPairs",
+          "display": "Host Pairs"
+        },
+        {
+          "value": "reputation",
+          "display": "Reputation"
+        },
+        {
+          "value": "articles",
+          "display": "Articles"
+        },
+        {
+          "value": "sslCerts",
+          "display": "SSL Certs"
+        },
+        {
+          "value": "osint",
+          "display": "OSINT"
+        },
+        {
+          "value": "subdomains",
+          "display": "Subdomains"
+        }
+      ],
+      "type": "select",
+      "options": [
+        {
+          "value": "resolutions",
+          "display": "Resolutions"
+        },
+        {
+          "value": "malware",
+          "display": "Malware"
+        },
+        {
+          "value": "services",
+          "display": "Services/Ports"
+        },
+        {
+          "value": "hostPairs",
+          "display": "Host Pairs"
+        },
+        {
+          "value": "reputation",
+          "display": "Reputation"
+        },
+        {
+          "value": "articles",
+          "display": "Articles"
+        },
+        {
+          "value": "sslCerts",
+          "display": "SSL Certs"
+        },
+        {
+          "value": "osint",
+          "display": "OSINT"
+        },
+        {
+          "value": "subdomains",
+          "display": "Subdomains"
+        }
+      ],
+      "multiple": true,
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "records",
+      "name": "Maximum Number of Associated Records to Return",
+      "description": "Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Defaults to 100.",
+      "default": 100,
+      "type": "number",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "blocklist",
+      "name": "Ignore List",
+      "description": "List of domains and IPs that you never want to send to PassiveTotal",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "domainBlocklistRegex",
+      "name": "Ignore Domain Regex",
+      "description": "Domains that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "ipBlocklistRegex",
+      "name": "Ignore IP Regex",
+      "description": "IPs that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "maxConcurrent",
+      "name": "Max Concurrent Search Requests",
+      "description": "Maximum number of concurrent search requests (defaults to 10).  Integration must be restarted after changing this option.",
+      "default": 10,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "minTime",
+      "name": "Minimum Time Between Searches",
+      "description": "Minimum amount of time in milliseconds between each entity search (defaults to 50).  Integration must be restarted after changing this option.",
+      "default": 50,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}

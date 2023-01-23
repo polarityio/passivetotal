@@ -31,6 +31,7 @@ module.exports = {
       regex: /UA-[0-9]{4,9}(-[0-9]{1,4})?/
     }
   ],
+  defaultColor: 'light-gray',
   onDemandOnly: true,
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -40,7 +41,6 @@ module.exports = {
    * @optional
    */
   styles: ['./styles/pt.less'],
-  defaultColor: 'light-blue',
   /**
    * Provide custom component logic and template for rendering the integration details block.  If you do not
    * provide a custom template and/or component then the integration will display data as a table of key value
@@ -125,7 +125,8 @@ module.exports = {
     {
       key: 'enabledDatasources',
       name: 'Enabled Datasources',
-      description: 'Select which datasources are enabled.  Certain datasources require an enterprise key.  This option should be set to "Users can view only"',
+      description:
+        'Select which datasources are enabled.  Certain datasources require an enterprise key.  This option should be set to "Users can view only"',
       default: [
         {
           value: 'resolutions',
@@ -211,7 +212,7 @@ module.exports = {
       key: 'records',
       name: 'Maximum Number of Associated Records to Return',
       description:
-          'Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Defaults to 100.',
+        'Maximum number of Malware, Host Pairs, and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return. Defaults to 100.',
       default: 100,
       type: 'number',
       userCanEdit: true,
