@@ -1,0 +1,102 @@
+{
+  "name": "RiskIQ Community (PassiveTotal)",
+  "acronym": "PT",
+  "description": "RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.",
+  "entityTypes": ["domain", "ipv4"],
+  "customTypes": [
+    {
+      "key": "trackerId",
+      "regex": "/UA-[0-9]{4,9}(-[0-9]{1,4})?/"
+    }
+  ],
+  "onDemandOnly": true,
+  "styles": ["./styles/pt.less"],
+  "defaultColor": "light-blue",
+  "block": {
+    "component": {
+      "file": "./component/block.js"
+    },
+    "template": {
+      "file": "./templates/block.hbs"
+    }
+  },
+  "summary": {
+    "component": {
+      "file": "./component/summary.js"
+    },
+    "template": {
+      "file": "./templates/summary.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "trace"
+  },
+  "options": [
+    {
+      "key": "host",
+      "name": "RiskIQ Community (PassiveTotal) API URL",
+      "description": "The URL of the RiskIQ Community (PassiveTotal) API including the schema (i.e., https://)",
+      "default": "https://api.passivetotal.org",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "user",
+      "name": "API Username",
+      "description": "Valid RiskIQ Community (PassiveTotal) Username",
+      "default": "",
+      "type": "text",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "apiKey",
+      "name": "API Key",
+      "description": "Valid RiskIQ Community (PassiveTotal) API Key",
+      "default": "",
+      "type": "password",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "records",
+      "name": "Number of Associated Records to Return",
+      "description": "Total number of Malware and OSINT results to return in the Polarity Overlay. Please note the higher the number to longer it will take for the query to return",
+      "default": 10,
+      "type": "number",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "searchHistorical",
+      "name": "WHOIS historical data",
+      "description": "Ability to search WHOIS historical data",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "enableRep",
+      "name": "Enable Reputation Lookup",
+      "description": "If checked, the integration will perform an optional onDetails API request to retrieve the entity reputation details.  This option requires additional privileged API access.",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "enablePairs",
+      "name": "Enable Host Pairs Lookup"
+    }
+  ]
+}
