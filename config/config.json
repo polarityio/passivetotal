@@ -1,4 +1,5 @@
 {
+  "polarityIntegrationUuid": "cd788910-cce1-11ed-aeee-075d3490155d",
   "name": "RiskIQ Community (PassiveTotal)",
   "acronym": "PT",
   "description": "RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.",
@@ -33,8 +34,7 @@
     "key": "",
     "passphrase": "",
     "ca": "",
-    "proxy": "",
-    "rejectUnauthorized": true
+    "proxy": ""
   },
   "logging": {
     "level": "info"
