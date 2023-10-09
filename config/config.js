@@ -24,7 +24,7 @@ module.exports = {
    */
   description:
     'RiskIQ Community (PassiveTotal) provides freemium threat hunting capabilities in order to surface threats faster and reduce risk.',
-  entityTypes: ['domain', 'ipv4'],
+  entityTypes: ['domain', 'IPv4'],
   customTypes: [
     {
       key: 'trackerId',
@@ -80,7 +80,7 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: ""
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
